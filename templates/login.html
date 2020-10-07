@@ -11,7 +11,7 @@
             <h1>Login</h1>
             <div class="links">
                 <a href="{{ url_for('login') }}" class="active">Login</a>
-                <a href="#">Can't login?</a>
+                <a href="{{ url_for('cant_login') }}">Can't login?</a>
             </div>
             <form action="{{ url_for('login') }}" method="post">
                 <!-- https://stackoverflow.com/questions/12894169/what-is-the-html-for-attribute-in-label explains for attribute-->

@@ -6,6 +6,7 @@
     -moz-osx-font-smoothing: grayscale;
 }
 body {
+    height: 100%;
     background-color: #FFF1E2;
     margin: 0;
 }
@@ -40,13 +41,13 @@ body {
     border-bottom: 3px solid #A3080C;
     color: #A3080C;
 }
-.login form, .register form {
+.login form, .register div {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     padding-top: 20px;
 }
-.login form label, .register form label {
+.login form label, .register  {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -82,7 +83,9 @@ body {
     background-color: #F5D4B7;
     height: 60px;
     width: 100%;
-    border: 0;
+    border-bottom-style: solid;
+    border-color: #A3080C;
+
 }
 .navtop div {
     display: flex;
@@ -119,9 +122,11 @@ body.loggedin {
 }
 
 .sidebar{
+    margin-bottom: -1500px; 
+    padding-bottom: 1500px;
     overflow-x: hidden;
     background-color: #F5D4B7;
-    border-style: solid;
+    border-right-style: solid;
     border-color: #A3080C;
     float: left;
 }

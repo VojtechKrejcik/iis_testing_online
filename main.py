@@ -19,7 +19,11 @@ mysql = MySQL(app)
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return render_template('login.html', msg='')
+        try:
+            if session['loggedin']:
+                return redirect(url_for('home'))
+        except:
+            return render_template('login.html', msg='')
 
     elif request.method == 'POST':
          # Create variables for easy access
@@ -44,8 +48,10 @@ def login():
             # Account doesnt exist or username/password incorrect
             return render_template('login.html', msg='Incorrect username/password!')
     # Show the login form with message (if any)
-        
 
+@app.route('/cant_login')        
+def cant_login():
+    return render_template("cant_login.html")
 
 @app.route('/home/', methods=['GET', 'POST'])
 def home():
@@ -57,4 +63,15 @@ def home():
         return session['status']
     elif session['status'] == "student":
         return render_template('home_student.html')
+    else:
+        return render_template('login.html', msg='Please, log in')
+
+@app.route('/home/logout')
+def logout():
+    # Remove session data, this will log the user out
+   session.pop('loggedin', None)
+   session.pop('id', None)
+   session.pop('username', None)
+   # Redirect to login page
+   return redirect(url_for('login'))
 
