@@ -41,6 +41,7 @@ def login():
             session['id'] = account['id']
             session['username'] = account['username']
             session['status'] = account['status']
+            session['email'] = account['email']
             # Redirect to home page
             print('This is error output', file=sys.stderr)
             return redirect(url_for('home'))
@@ -56,13 +57,13 @@ def cant_login():
 @app.route('/home/', methods=['GET', 'POST'])
 def home():
     if session['status'] == "admin":
-        return session['status']
+        return render_template('home.html', profile=session)
     elif session['status'] == "profesor":
-        return session['status']
+        return render_template('home.html', profile=session)
     elif session['status'] == "assistent":
-        return session['status']
+        return render_template('home.html', profile=session)
     elif session['status'] == "student":
-        return render_template('home_student.html')
+        return render_template('home.html', profile=session)
     else:
         return render_template('login.html', msg='Please, log in')
 
@@ -74,4 +75,12 @@ def logout():
    session.pop('username', None)
    # Redirect to login page
    return redirect(url_for('login'))
+
+@app.route('/home/add_user')
+def add_user():
+    if session['status'] != 'admin':
+        return redirect(url_for('home'))
+    
+    return render_template('add_user.html')
+
 

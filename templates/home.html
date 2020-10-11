@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{%  block content  %}
+
+<div class="profile_table">
+    <h1>Logged in as:</h1>
+    <h3> ID of user: {{ profile.id }} </h3>
+    <h3> Email: {{ profile.email }} </h3>
+    <h3> Name: {{ profile.name }} </h3>
+    <h3> Surname: {{ profile.surname }} </h3>
+</div>
+{% endblock  %}

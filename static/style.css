@@ -144,3 +144,12 @@ body.loggedin {
 .sidebar a:hover {
     color: #eaebed;
 }
+
+.profile_table{
+    width: 600px;
+    padding: 1cm;
+    margin: 1cm;
+    border-style: solid;
+    border-color: #A3080C;
+
+}

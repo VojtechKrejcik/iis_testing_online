@@ -8,14 +8,29 @@
     </head>
     <body class="loggedin">
        <!--Sidebar menu-->
-        <div class="sidebar" style="display:none" id="mySidebar">
-            <a href="#" class="w3-bar-item w3-button">Register new test</a>
-            <br>
-            <h2>My tests</h2>
-            <a href="#" class="w3-bar-item w3-button">Link 1</a>
-            <a href="#" class="w3-bar-item w3-button">Link 2</a>
-            <a href="#" class="w3-bar-item w3-button">Link 3</a>
-            <br>
+        <div class="sidebar" style="display:none" id="mySidebar">            
+            {%  block sidebar  %}
+                {% if profile.status == "admin" %}
+                    <h2>Admin</h2>
+                    <a href="#" class="sidebar_button">Add user</a>
+                    <a href="#" class="sidebar_button">Manage users</a>
+                {% endif %} 
+                {% if profile.status == "admin" or profile.status == "professor" %}
+                    <h2>Professor</h2>
+                    <a href="#" class="sidebar_button">Create test</a>
+                    <a href="#" class="sidebar_button">Test created by me</a>
+                    <a href="#" class="sidebar_button">Authorize assitent</a>
+                {% endif %}
+                {% if profile.status == "admin" or profile.status == "professor" or profile.status == "assistant" %}
+                    <h2>Assistant</h2>
+                    <a href="#" class="sidebar_button">Apply for test</a>
+                    <a href="#" class="sidebar_button">Score tests</a>
+                {% endif %}
+            {%  endblock sidebar  %}
+            <h2>Student</h2>
+            <a href="#" class="sidebar_button">Register test</a>
+            <a href="#" class="sidebar_button">Registered tests</a>
+            <a href="#" class="sidebar_button">Submitted tests</a>
         </div>
         <div  id="main">
 
@@ -29,10 +44,10 @@
                 <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i>Logout</a>
             </div>
         </nav>
-        {%  prdel  %}
+        {%  block content  %}
     
 
-        {% end_prdel  %}
+        {% endblock  %}
         </div>
         <script>
             var state = false;

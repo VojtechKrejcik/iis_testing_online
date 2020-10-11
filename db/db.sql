@@ -1,9 +1,9 @@
+DROP DATABASE `iis`;
 CREATE DATABASE IF NOT EXISTS `iis`;
 USE `iis`;
 
 CREATE TABLE IF NOT EXISTS `accounts` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
-      `username` varchar(50) NOT NULL,
       `password` varchar(255) NOT NULL,
       `name` varchar(20) NOT NULL,
       `surname` varchar(20) NOT NULL,
