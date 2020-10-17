@@ -4,6 +4,13 @@
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    
+}
+.body-link a{
+    color: #A3080C;
+}
+.profile_table{
+    color: #000000;
 }
 body {
     height: 100%;

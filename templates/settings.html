@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{%  block content  %}
+
+<div class="profile_table">
+    <div class="body-link"><a href="{{ url_for('changeName') }}"><i class="fas fa-signature"></i>Change name</a></div>
+    <div class="body-link"><a href="{{ url_for('changeEmail') }}"><i class="fas fa-envelope"></i>Change email</a></div>
+    <div class="body-link"><a href="{{ url_for('changePassword') }}"><i class="fas fa-lock"></i>Change password</a></div>
+</div>
+{% endblock  %}

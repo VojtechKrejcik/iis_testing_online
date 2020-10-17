@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
+from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordForm
 import MySQLdb.cursors
 import re
+import secrets
 import sys
 
 app = Flask(__name__)
@@ -9,7 +11,7 @@ app.secret_key = 'prdel'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'vojta'
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_PASSWORD'] = 'vK_421427'
 app.config['MYSQL_DB'] = 'iis'
 
 # Intialize MySQL
@@ -56,13 +58,7 @@ def cant_login():
 
 @app.route('/home/', methods=['GET', 'POST'])
 def home():
-    if session['status'] == "admin":
-        return render_template('home.html', profile=session)
-    elif session['status'] == "profesor":
-        return render_template('home.html', profile=session)
-    elif session['status'] == "assistent":
-        return render_template('home.html', profile=session)
-    elif session['status'] == "student":
+    if session['loggedin']:
         return render_template('home.html', profile=session)
     else:
         return render_template('login.html', msg='Please, log in')
@@ -76,11 +72,39 @@ def logout():
    # Redirect to login page
    return redirect(url_for('login'))
 
-@app.route('/home/add_user')
+@app.route('/home/add_user', methods=['GET','POST'])
 def add_user():
     if session['status'] != 'admin':
         return redirect(url_for('home'))
     
-    return render_template('add_user.html')
+    form = AddUserForm()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            password = secrets.token_hex(8)
+            flash(f'Login information for {form.name.data} {form.surname.data} are:\nEmail: {form.email.data}\nPassword: {password}', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash('prdel', 'danger')
+            return redirect(url_for('add_user'))
 
 
+    return render_template('add_user.html', form=form, profile=session)
+
+@app.route('/home/settings')
+def settings():
+    return render_template('settings.html', profile=session)
+
+@app.route('/home/settings/change_name')
+def changeName():
+    form = ChangeNameForm()
+    return render_template('change_name.html', profile=session, form=form)
+
+@app.route('/home/settings/change_password')
+def changePassword():
+    form = ChangePasswordForm()
+    return render_template('change_password.html', profile=session, form=form)
+
+@app.route('/home/settings/change_email')
+def changeEmail():
+    form = ChangeEmailForm()
+    return render_template('change_email.html', profile=session, form=form)
