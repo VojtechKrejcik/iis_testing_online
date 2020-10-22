@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Online testing</title>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body class="loggedin">
+       <!--Sidebar menu-->
+        <div class="sidebar" style="display:none" id="mySidebar">            
+            {%  block sidebar  %}
+                {% if profile.status == "admin" %}
+                    <h2>Admin</h2>
+                    <a href="{{ url_for('add_user') }}" class="sidebar_button">Add user</a>
+                    <a href="#" class="sidebar_button">Manage users</a>
+                {% endif %} 
+                {% if profile.status == "admin" or profile.status == "professor" %}
+                    <h2>Professor</h2>
+                    <a href="#" class="sidebar_button">Create test</a>
+                    <a href="#" class="sidebar_button">Test created by me</a>
+                    <a href="#" class="sidebar_button">Authorize assitent</a>
+                {% endif %}
+                {% if profile.status == "admin" or profile.status == "professor" or profile.status == "assistant" %}
+                    <h2>Assistant</h2>
+                    <a href="#" class="sidebar_button">Apply for test</a>
+                    <a href="#" class="sidebar_button">Score tests</a>
+                {% endif %}
+            {%  endblock sidebar  %}
+            <h2>Student</h2>
+            <a href="#" class="sidebar_button">Register test</a>
+            <a href="#" class="sidebar_button">Registered tests</a>
+            <a href="#" class="sidebar_button">Submitted tests</a>
+        </div>
+        <div  id="main">
+
+        <!--Rest of the page-->
+        <nav class="navtop">
+            <div>
+                <a href="#" onclick="sidebar_open_close()"><i class="fas fa-bars"></i></a>
+                <h1>Online testing</h1>
+                <a href="{{ url_for('home') }}"><i class="fas fa-home"></i>Home</a>
+                <a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i>Settings</a>
+                <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i>Logout</a>
+            </div>
+        </nav>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="aler alert-{{category}}">
+                            {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {%  block content  %}
+    
+
+        {% endblock  %}
+        </div>
+        <script>
+            var state = false;
+            function sidebar_open_close() {
+              if (state == false){
+              state = true;
+              document.getElementById("main").style.marginLeft = "20%";
+              document.getElementById("mySidebar").style.width = "20%";
+              document.getElementById("mySidebar").style.display = "inline-block";
+              } else{
+                  sidebar_close();
+              }
+            }
+            function sidebar_close() {
+              state = false;
+              document.getElementById("main").style.marginLeft = "0%";
+              document.getElementById("mySidebar").style.width = "0%";
+              document.getElementById("mySidebar").style.display = "none";
+            }
+        </script>
+    </body>
+</html>

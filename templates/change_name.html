@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{%  block content  %}
+    <form method="POST" action="">
+        <div class="profile_table">
+            <div class="form-group">
+                <h3 color="black">Name</h3>
+                {% if form.name.errors %}
+                    {{ form.name(class="form-control form-control-lg form-control-lg is-invalid")}}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.name(class="form-control form-control-lg")  }}
+                {% endif %}
+                    
+                
+            </div>
+            <div class="form-group">
+                <h3 color="black">Surname</h3>
+                {% if form.surname.errors %}
+                    {{ form.surname(class="form-control form-control-lg form-control-lg is-invalid")}}
+                    <div class="invalid-feedback">
+                        {% for error in form.surname.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.surname(class="form-control form-control-lg")  }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-danger")  }}
+                
+            </div>
+        </form>
+    </div>
+
+{% endblock  %}
