@@ -8,8 +8,8 @@ app = Flask(__name__)
 app.secret_key = 'prdel'
 
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'vojta'
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_USER'] = 'wulferion'
+app.config['MYSQL_PASSWORD'] = 'prdel'
 app.config['MYSQL_DB'] = 'iis'
 
 # Intialize MySQL
@@ -62,7 +62,7 @@ def home():
     elif session['status'] == "assistent":
         return session['status']
     elif session['status'] == "student":
-        return render_template('home_student.html')
+        return render_template('home_student.html', title='Online Testing', heading='Home')
     else:
         return render_template('login.html', msg='Please, log in')
 
@@ -75,3 +75,6 @@ def logout():
    # Redirect to login page
    return redirect(url_for('login'))
 
+@app.route('/create_test')
+def create_test():
+    return render_template('create_test.html')
