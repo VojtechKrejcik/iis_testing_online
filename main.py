@@ -1,13 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_mysqldb import MySQL
+#from flask_mysqldb import MySQL
 from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordForm
-import MySQLdb.cursors
+#import MySQLdb.cursors
 import re
 import secrets
 import sys
+from flask_sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
 app.secret_key = 'prdel'
+
+#SqlAlchemy Database Configuration With Mysql
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:''@localhost/flaskcodeloop'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'vojta'
@@ -15,7 +23,7 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'iis'
 
 # Intialize MySQL
-mysql = MySQL(app)
+#mysql = MySQL(app)
 
 # http://localhost:5000/login/ - this will be the login page, we need to use both GET and POST requests
 @app.route('/', methods=['GET', 'POST'])
@@ -32,10 +40,18 @@ def login():
         username = request.form['username']
         password = request.form['password']
         # Check if account exists using MySQL
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password))
+
+
+        #cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        #cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password))
+
+
         # Fetch one record and return result
-        account = cursor.fetchone()
+
+
+        #account = cursor.fetchone()
+
+        
         # If account exists in accounts table in out database
         if account:
             # Create session data, we can access this data in other routes
