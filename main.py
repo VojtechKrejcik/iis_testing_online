@@ -74,8 +74,8 @@ def logout():
 
 @app.route('/create_test')
 def create_test():
-    return render_template('create_test.html')
-    
+    return render_template('create_test.html', profile =session)
+
 @app.route('/home/add_user', methods=['GET','POST'])
 def add_user():
     if session['status'] != 'admin':
