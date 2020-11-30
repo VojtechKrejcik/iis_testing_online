@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div id="config">
+    <h2>Create Question</h2>
+        <form method="POST" action="">
+            <div class="profile_table"> <!--TODO: Change and style the page-->
+                <div class="form-group">
+                    <!--Test question-->
+                    <h3 color="black">{{ form.question.label }}</h3>
+                    {% if form.question.errors %}
+                        {{ form.question(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.question(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <!--Test Value-->
+                    <h3 color="black">{{ form.value.label }} </h3> [dd/mm/yy]
+                    {% if form.value.errors %}
+                        {{ form.value(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.value(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.create(class="btn btn-danger")}}
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

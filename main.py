@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 #from flask_mysqldb import MySQL
-from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordForm
+from forms import *
 #import MySQLdb.cursors
 import re
 import secrets
@@ -14,10 +14,10 @@ app = Flask(__name__)
 app.secret_key = 'prdel'
 
 #SqlAlchemy Database Configuration With Mysql
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:VelkaPrdel@localhost/iis'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:prdel@localhost/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://root:VelkaPrdel@localhost/iis')
+engine = sq.create_engine('mysql+pymysql://root:prdel@localhost/iis')
 db=scoped_session(sessionmaker(bind=engine))
 metadata = sq.MetaData()
 # Intialize MySQL
@@ -79,10 +79,6 @@ def logout():
    session.pop('username', None)
    # Redirect to login page
    return redirect(url_for('login'))
-
-@app.route('/create_test')
-def create_test():
-    return render_template('create_test.html', profile =session)
 
 @app.route('/home/add_user', methods=['GET','POST'])
 def add_user():
@@ -161,3 +157,39 @@ def changeEmail():
     flash("something went wrong")
     return render_template('change_email.html', profile=session, form=form)
 
+@app.route('/create_test', methods=['GET','POST'])
+def create_test():
+    #Add forms
+    configform = TestConfigForm(request.form)
+    fullform = FullTextQuestionForm(request.form)
+
+    #Check for active session
+    if 'test_config' in session:
+        config = session['test_config']
+    else:
+        config = {"name": "",
+                  "start": "",
+                  "end": "" 
+                }
+
+
+    if request.method == "POST":
+        #Continue depending on the button used
+        if configform.create.data:
+            #save config to session
+            config['name'] = configform.name.data
+            config['start'] = configform.start_date.data
+            config['end'] = configform.end_date.data
+            session['test_config'] = config
+        if configform.add_full.data:
+            return render_template('create_full.html',profile=session,form=fullform)
+        if configform.cancel.data:
+            session.pop('test_config',None)
+        if fullform.create.data:
+            #save question
+            pass
+    
+    configform.name.data = config["name"]
+    configform.start_date.data = config["start"]
+    configform.end_date.data = config["end"]
+    return render_template('create_test.html', profile=session, config=configform)

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField, Form
-from wtforms.validators import DataRequired, Length, Email, EqualTo
+from wtforms import StringField, PasswordField, SubmitField, SelectField, DateField, IntegerField, Form
+from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange
 
 
 class AddUserForm(Form):
@@ -24,3 +24,20 @@ class ChangePasswordForm(Form):
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Change')
+
+class TestConfigForm(Form):
+    name = StringField('Test Name',validators=[DataRequired(),Length(min=3)])
+    start_date = DateField('Start Date', format='%d/%m/%Y',description="dd/mm/yy")
+    end_date = DateField('End Date', format='%d/%m/%Y')
+    create = SubmitField('Create test')
+    update = SubmitField('Update test')
+    cancel = SubmitField('cancel')
+    add_full = SubmitField('Add fulltext question')
+    add_num = SubmitField('Add number question')
+    add_abc = SubmitField('Add abcd question')
+
+class FullTextQuestionForm(Form):
+    #TODO: Add immage support
+    question = StringField('Question', validators=[DataRequired()])
+    value = IntegerField('Point value', validators=[DataRequired(),NumberRange(min=1)])
+    create = SubmitField('Create question')
