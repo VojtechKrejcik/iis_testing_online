@@ -5,23 +5,21 @@ from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordFo
 import re
 import secrets
 import sys
+import sqlalchemy as sq
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import scoped_session,sessionmaker, Session
 
 
 app = Flask(__name__)
 app.secret_key = 'prdel'
 
 #SqlAlchemy Database Configuration With Mysql
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:''@localhost/flaskcodeloop'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:VelkaPrdel@localhost/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'vojta'
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'iis'
-
+engine = sq.create_engine('mysql+pymysql://root:VelkaPrdel@localhost/iis')
+db=scoped_session(sessionmaker(bind=engine))
+metadata = sq.MetaData()
 # Intialize MySQL
 #mysql = MySQL(app)
 
@@ -37,35 +35,29 @@ def login():
 
     elif request.method == 'POST':
          # Create variables for easy access
-        username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
         # Check if account exists using MySQL
-
-
-        #cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        #cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password))
-
-
-        # Fetch one record and return result
-
-
-        #account = cursor.fetchone()
-
+        account = db.execute("SELECT * FROM accounts WHERE email=:email",{"email":email}).fetchone()
         
         # If account exists in accounts table in out database
         if account:
             # Create session data, we can access this data in other routes
-            session['loggedin'] = True
-            session['id'] = account['id']
-            session['username'] = account['username']
-            session['status'] = account['status']
-            session['email'] = account['email']
-            # Redirect to home page
-            print('This is error output', file=sys.stderr)
-            return redirect(url_for('home'))
+            if password == account['password']:
+                session['loggedin'] = True
+                session['id'] = account['id']
+                session['name'] = account['name']
+                session['surname'] = account['surname']
+                session['status'] = account['status']
+                session['email'] = account['email']
+                # Redirect to home page
+                return redirect(url_for('home'))
+            else:
+                return render_template('login.html', msg='Incorrect password!')
+
         else:
             # Account doesnt exist or username/password incorrect
-            return render_template('login.html', msg='Incorrect username/password!')
+            return render_template('login.html', msg='Incorrect email/password!')
     # Show the login form with message (if any)
 
 @app.route('/cant_login')        
@@ -92,15 +84,22 @@ def logout():
 def add_user():
     if session['status'] != 'admin':
         return redirect(url_for('home'))
-    
-    form = AddUserForm()
+
+    form = AddUserForm(request.form)
     if request.method == "POST":
-        if form.validate_on_submit():
-            password = secrets.token_hex(8)
-            flash(f'Login information for {form.name.data} {form.surname.data} are:\nEmail: {form.email.data}\nPassword: {password}', 'success')
-            return redirect(url_for('home'))
+        if form.validate():
+            if None == db.execute("SELECT * FROM accounts WHERE email=:email",{"email":form.email.data}).fetchone():
+                password = secrets.token_hex(4)
+                data = {"password":password, "name":form.name.data,"surname":form.surname.data,"email":form.email.data, "status":form.status.data}
+                db.execute(f"INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES (:password, :name, :surname, :email,:status)", data)
+                db.commit()
+                flash(f'Login information for {form.name.data} {form.surname.data} are:\nEmail: {form.email.data}\nPassword: {password}', 'success')
+                return redirect(url_for('home'))
+            else:
+                flash("Email is already used")
+                return redirect(url_for('add_user'))   
         else:
-            flash('prdel', 'danger')
+            flash("not valid values")
             return redirect(url_for('add_user'))
 
 
@@ -110,17 +109,51 @@ def add_user():
 def settings():
     return render_template('settings.html', profile=session)
 
-@app.route('/home/settings/change_name')
+@app.route('/home/settings/change_name', methods=['GET','POST'])
 def changeName():
-    form = ChangeNameForm()
+    form = ChangeNameForm(request.form)
+    if request.method == "POST":
+        if not form.validate():
+            flash("something went wrong", form.name.data)
+        db.execute(f"""update `accounts` 
+                    set `surname`='{form.surname.data}',
+                    set `name`='{form.name.data}'
+                    where id = {session['id']}""")
+        db.commit()        
+        flash('surname changed!')
+        return render_template('change_email.html', profile=session, form=form)
+    flash("something went wrong")
     return render_template('change_name.html', profile=session, form=form)
 
-@app.route('/home/settings/change_password')
+@app.route('/home/settings/change_password', methods=['GET','POST'])
 def changePassword():
-    form = ChangePasswordForm()
-    return render_template('change_password.html', profile=session, form=form)
+    form = ChangePasswordForm(request.form)
+    if request.method == "POST":
+        if not form.validate():
+            flash("something went wrong", form.password.data)
+        db.execute(f"""update `accounts` 
+                    set `password`='{form.password.data}'
+                    where id = {session['id']}""")
+        db.commit()        
+        flash('Password changed!')
+        return render_template('change_password.html', profile=session, form=form)
 
-@app.route('/home/settings/change_email')
+    else:
+        return render_template('change_password.html', profile=session, form=form)
+
+@app.route('/home/settings/change_email', methods=['GET','POST'])
 def changeEmail():
-    form = ChangeEmailForm()
+    form = ChangeEmailForm(request.form)
+    if request.method == "POST":
+        if not form.validate():
+            flash("something went wrong", form.email.data)
+        if None == db.execute("SELECT * FROM accounts WHERE email=:email",{"email":form.email.data}).fetchone():
+            db.execute(f"""update `accounts` 
+                        set `email`='{form.email.data}'
+                        where id = {session['id']}""")
+            db.commit()        
+            flash('email changed!')
+            return render_template('change_email.html', profile=session, form=form)
+    flash("something went wrong")
     return render_template('change_email.html', profile=session, form=form)
+
