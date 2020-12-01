@@ -153,7 +153,7 @@ body.loggedin {
 }
 
 .profile_table{
-    width: 90%;
+    width:90%;
     padding: 1cm;
     margin: 1cm;
     border-style: solid;
@@ -166,4 +166,12 @@ body.loggedin {
     margin: 1cm;
     border-style: solid;
     border-color: #A3080C;
+}
+
+.password_cell{
+    display:none;
+}
+
+.show_password:hover + .password_cell{
+    display: inline-block;
 }

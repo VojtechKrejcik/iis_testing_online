@@ -14,7 +14,7 @@
                 {% if profile.status == "admin" %}
                     <h2>Admin</h2>
                     <a href="{{ url_for('add_user') }}" class="sidebar_button">Add user</a>
-                    <a href="#" class="sidebar_button">Manage users</a>
+                    <a href="{{ url_for('manage_users') }}" class="sidebar_button">Manage users</a>
                 {% endif %} 
                 {% if profile.status == "admin" or profile.status == "professor" %}
                     <h2>Professor</h2>
