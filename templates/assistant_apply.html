@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Apply for tests</h1>
+<div id=tests>
+    {% for test in tests %}
+    <div class=profile_table>
+        <h2>{{ test['config']['name'] }}</h2>
+
+        <div class="form-group">
+        <h3>Active</h3>
+        <table>
+            <td>From: {{ test['config']['start'] }}</td><td>Until: {{ test['config']['end'] }}</td>
+        </table>
+        <h3>Questions:</h3>
+        {{ test['config']['question_num'] }}
+        <h3>Status:</h3>
+        {% if test['config']['id'] in approved %}
+            <div color="green">APPROVED</div>
+        {% elif test['config']['id'] in applied %}
+            <div color="red">APPLIED</div>
+        {% else %}
+            <div color="red">NOT APPLIED</div>
+        {% endif %}
+        <form method="POST" action="">
+            {%if test['config']['id'] in applied%}
+                <button name="unapply" value={{ test['config']['id'] }} type="submit" class="btn btn-danger">Unapply</button>
+            {%else%}
+                <button name="apply" value={{ test['config']['id'] }} type="submit" class="btn btn-danger">Apply</button>
+            {%endif%}
+        </form>
+
+        </div>
+    </div>
+{% endfor %}
+</div>
+{% endblock %}

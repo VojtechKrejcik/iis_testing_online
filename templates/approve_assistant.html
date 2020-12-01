@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Approve assistants</h1>
+<div id=assistants>
+{% for assitant in assistants %}
+    <div class=profile_table>
+    {{ assitant['name'] }} {{ assitant['surname'] }} applies for {{ assitant['test']['config']['name'] }}
+    <form method="POST" action="">
+    <button name="approve" value={{ assitant['test']['config']['id'] }} type="submit" class="btn btn-danger">Approve</button> 
+    <button name="deny" value={{ assitant['test']['config']['id'] }} type="submit" class="btn btn-danger">Deny</button>
+    </form>
+    </div>
+{% endfor %}
+</div>
+{% endblock %}

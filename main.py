@@ -261,7 +261,7 @@ def create_test():
                     #update DB (editing from another page)
                     else:
                         tid = (session['test_config']['id'],None)
-                        db.execute(f"UPDATE `test_template` SET `active_from`='{start}',`active_to`='{end}'")
+                        db.execute(f"UPDATE `test_template` SET `active_from`='{start}',`active_to`='{end}' WHERE test_id = {tid[0]}")
 
                     #save JSON
                     test = dict()
@@ -350,6 +350,8 @@ def my_tests():
         with open(test_file,"r") as f:
             tests.append(json.load(f))
 
+    #find approved assistants for print
+
     if request.method == "POST":
         #Edit tests
         if 'edit' in request.form:
@@ -368,3 +370,108 @@ def my_tests():
                     os.remove(f"test_templates/test_template{test['config']['id']}.json")
                     tests.remove(test)
     return render_template('my_tests.html', profile=session, tests=tests)
+
+@app.route("/home/apply",methods=['GET','POST'])
+def assistant_apply():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `file` FROM `test_template`")
+    test_files = [row[0] for row in result]
+    #Get info on tests
+    tests = list()
+    for test_file in test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'assistant'")
+    applied = [row[0] for row in result]
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'assistant' AND `approved`='1'")
+    approved = [row[0] for row in result]
+    if request.method == "POST":
+        #Apply tests
+        if 'apply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['apply']):
+                  #input into DB
+                  db.execute(f"INSERT INTO `registrations` (`person_id`, `person_type`, `test_id` ,`approved`,`score`) VALUES ('{user_id}','assistant','{test['config']['id']}','0','0')")
+                  db.commit()
+                  applied.append(test['config']['id'])
+        #Unnaply from tests
+        if 'unapply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['unapply']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='assistant'")
+                  db.commit()
+                  applied.remove(test['config']['id'])
+                  
+    return render_template('assistant_apply.html', profile=session, tests=tests, applied=applied, approved=approved)
+
+@app.route("/home/register",methods=['GET','POST'])
+def student_register():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `file` FROM `test_template`")
+    test_files = [row[0] for row in result]
+    #Get info on tests
+    tests = list()
+    for test_file in test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'student'")
+    applied = [row[0] for row in result]
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'student' AND `approved`='1'")
+    approved = [row[0] for row in result]
+    if request.method == "POST":
+        #Apply tests
+        if 'apply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['apply']):
+                  #input into DB
+                  db.execute(f"INSERT INTO `registrations` (`person_id`, `person_type`, `test_id` ,`approved`,`score`) VALUES ('{user_id}','student','{test['config']['id']}','0','0')")
+                  db.commit()
+                  applied.append(test['config']['id'])
+        #Unnaply from tests
+        if 'unapply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['unapply']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='student'")
+                  db.commit()
+                  applied.remove(test['config']['id'])
+                  
+    return render_template('student_register.html', profile=session, tests=tests, applied=applied, approved=approved)
+
+@app.route("/home/approveass",methods=['GET','POST'])
+def approve_assistant():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}'")
+    assistants = list()
+    for row in result:
+        assistant = dict()
+        assistant['id'] = row[0]
+        assistant['name'] = row[1]
+        assistant['surname'] = row[2]
+        with open(row[3],"r") as f:
+            assistant['test'] = json.load(f)
+        assistants.append(assistant)
+
+    if request.method == "POST":
+        #Approve
+        if 'approve' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['approve']):
+                  #input into DB
+                  db.execute(f"UPDATE `registrations` SET `approved` = '1' WHERE `person_id`={assistant['id']} and `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+        #Deny
+        if 'deny' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['deny']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = {assistant['id']} AND `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+
+    return render_template('approve_assistant.html', profile=session, assistants=assistants)

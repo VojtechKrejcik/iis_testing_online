@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `registrations` (
 	CONSTRAINT `test_id_fk` FOREIGN KEY (`test_id`) 
 		REFERENCES `test_template`(`test_id`),
 		
-	PRIMARY KEY (`person_id`, `test_id`)
+	PRIMARY KEY (`person_id`, `test_id`,`person_type`)
 );
 
 INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('prdel', 'Pepik', 'Prdelka', 'admin@test.com','admin');
