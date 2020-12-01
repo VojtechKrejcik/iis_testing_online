@@ -3,7 +3,6 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordForm, ChangeUserDataForm
 #import MySQLdb.cursors
 import re
-import secrets
 import sys
 import sqlalchemy as sq
 from flask_sqlalchemy import SQLAlchemy
@@ -89,7 +88,7 @@ def add_user():
     if request.method == "POST":
         if form.validate():
             if None == db.execute("SELECT * FROM accounts WHERE email=:email",{"email":form.email.data}).fetchone():
-                password = secrets.token_hex(4)
+                password = 'prdel'
                 data = {"password":password, "name":form.name.data,"surname":form.surname.data,"email":form.email.data, "status":form.status.data}
                 db.execute(f"INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES (:password, :name, :surname, :email,:status)", data)
                 db.commit()
