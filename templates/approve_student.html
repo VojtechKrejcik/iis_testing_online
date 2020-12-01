@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Register students</h1>
+<div id=students>
+{% for student in students %}
+    <div class=profile_table>
+    {{ student['name'] }} {{ student['surname'] }} applies for {{ student['test']['config']['name'] }}
+    <form method="POST" action="">
+    <button name="approve" value={{ student['test']['config']['id'] }} type="submit" class="btn btn-danger">Approve</button> 
+    <button name="deny" value={{ student['test']['config']['id'] }} type="submit" class="btn btn-danger">Deny</button>
+    </form>
+    </div>
+{% endfor %}
+</div>
+{% endblock %}

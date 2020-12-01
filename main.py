@@ -445,7 +445,7 @@ def student_register():
 def approve_assistant():
     user_id = session['id']
     #Querry DB
-    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}'")
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}' AND `person_type` = 'assistant'")
     assistants = list()
     for row in result:
         assistant = dict()
@@ -475,3 +475,38 @@ def approve_assistant():
                   assistants.remove(assistant)
 
     return render_template('approve_assistant.html', profile=session, assistants=assistants)
+
+@app.route("/home/approvestud",methods=['GET','POST'])
+def approve_student():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}'")
+    assistants = list()
+    for row in result:
+        assistant = dict()
+        assistant['id'] = row[0]
+        assistant['name'] = row[1]
+        assistant['surname'] = row[2]
+        with open(row[3],"r") as f:
+            assistant['test'] = json.load(f)
+        assistants.append(assistant)
+
+    if request.method == "POST":
+        #Approve
+        if 'approve' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['approve']):
+                  #input into DB
+                  db.execute(f"UPDATE `registrations` SET `approved` = '1' WHERE `person_id`={assistant['id']} and `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+        #Deny
+        if 'deny' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['deny']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = {assistant['id']} AND `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+
+    return render_template('approve_student.html', profile=session, students=assistants)
