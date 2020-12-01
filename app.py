@@ -19,7 +19,7 @@ app.secret_key = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis')
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis')
 db=scoped_session(sessionmaker(bind=engine))
 metadata = sq.MetaData()
 # Intialize MySQL
