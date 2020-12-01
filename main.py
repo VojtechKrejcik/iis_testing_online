@@ -6,6 +6,7 @@ import re
 import secrets
 import sys
 import json
+import datetime
 import sqlalchemy as sq
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import scoped_session,sessionmaker, Session
@@ -172,8 +173,8 @@ def create_test():
         config = session['test_config']
     else:
         config = {"name": "",
-                  "start": "",
-                  "end": "",
+                  "start": "01/01/1111",
+                  "end": "01/01/1111",
                   "question_num": "1"
                 }
     if 'questions' in session:
@@ -188,8 +189,8 @@ def create_test():
             if request.form['create'] == 'Create test':
                 #save config to session
                 config['name'] = configform.name.data
-                config['start'] = configform.start_date.data
-                config['end'] = configform.end_date.data
+                config['start'] = configform.start_date.data.strftime("%m/%d/%Y")
+                config['end'] = configform.end_date.data.strftime("%m/%d/%Y")
                 config['question_num'] = configform.question_num.data
                 session['test_config'] = config
             #Question creation buttons
@@ -235,21 +236,25 @@ def create_test():
             if request.form['update'] == 'Update test':
                 #save config to session
                 config['name'] = configform.name.data
-                config['start'] = configform.start_date.data
-                config['end'] = configform.end_date.data
+                config['start'] = configform.start_date.data.strftime("%m/%d/%Y")
+                config['end'] = configform.end_date.data.strftime("%m/%d/%Y")
                 config['question_num'] = configform.question_num.data
                 session['test_config'] = config
         #Save test
-        """if 'save' in request.form:
+        if 'save' in request.form:
             if request.form['save'] == 'Save test':
                 config['name'] = configform.name.data
-                config['start'] = configform.start_date.data
-                config['end'] = configform.end_date.data
+                config['start'] = configform.start_date.data.strftime("%m/%d/%Y")
+                config['end'] = configform.end_date.data.strftime("%m/%d/%Y")
                 config['question_num'] = configform.question_num.data
                 #validate forms
                 if configform.start_date.validate(request.form) and configform.end_date.validate(request.form) and configform.question_num.validate(request.form):
+                    start = datetime.datetime.strptime(config['start'], '%m/%d/%Y')
+                    start = start.strftime("%Y-%m-%d")
+                    end = datetime.datetime.strptime(config['end'], '%m/%d/%Y')
+                    end = end.strftime("%Y-%m-%d")
                     #save to DB
-                    db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{config['start']}','{config['end']}','{session['id']}')")
+                    db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{start}','{end}','{session['id']}')")
                     tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
                     #save JSON
                     test = dict()
@@ -263,19 +268,19 @@ def create_test():
                     session.pop('test_config',None)
                     session.pop('questions',None)
                     config = {"name": "",
-                        "start": "",
-                        "end": "",
+                        "start": "01/01/1111",
+                        "end": "01/01/1111",
                         "question_num": "1"
                         }
                 #return to previous state TODO: feedback flash
-        #Cancel"""
+        #Cancel
         if configform.cancel.data:
             #pop all data from session
             session.pop('test_config',None)
             session.pop('questions',None)
             config = {"name": "",
-                  "start": "",
-                  "end": "",
+                  "start": "01/01/1111",
+                  "end": "01/01/1111",
                   "question_num": "1" 
                 }
         if configform.add_full.data:
@@ -292,8 +297,11 @@ def create_test():
     print(f"config: {config}",file=sys.stderr)
     if 'test_config' in session:
         print(f"session: {session['test_config']}",file=sys.stderr) 
-    configform.name.data = config["name"]
-    configform.start_date.data = str(config["start"])
-    configform.end_date.data = str(config["end"])
-    configform.question_num.data = config["question_num"]
+
+    start_time_obj = datetime.datetime.strptime(config['start'], '%m/%d/%Y')
+    end_time_obj = datetime.datetime.strptime(config['end'], '%m/%d/%Y')
+    configform.name.data = config['name']
+    configform.start_date.data = start_time_obj
+    configform.end_date.data = end_time_obj
+    configform.question_num.data = config['question_num']
     return render_template('create_test.html', profile=session, config=configform, questions=questions)
