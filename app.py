@@ -13,7 +13,7 @@ from sqlalchemy.orm import scoped_session,sessionmaker, Session
 
 
 app = Flask(__name__)
-app.secret_key = 'prdel'
+app.secret_key = 'secretkey'
 
 #SqlAlchemy Database Configuration With Mysql
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
@@ -91,7 +91,7 @@ def add_user():
     if request.method == "POST":
         if form.validate():
             if None == db.execute("SELECT * FROM accounts WHERE email=:email",{"email":form.email.data}).fetchone():
-                password = 'prdel'
+                password = 'heslo'
                 data = {"password":password, "name":form.name.data,"surname":form.surname.data,"email":form.email.data, "status":form.status.data}
                 db.execute(f"INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES (:password, :name, :surname, :email,:status)", data)
                 db.commit()
