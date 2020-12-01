@@ -20,7 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://xkrejc68@real-iis:prdel666$@rea
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis',pool_size=200, max_overflow=0)
-db=Session(sessionmaker(bind=engine))
+db=scoped_session(sessionmaker(bind=engine, expire_on_commit=False))
 metadata = sq.MetaData()
 # Intialize MySQL
 #mysql = MySQL(app)
