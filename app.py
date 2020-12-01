@@ -578,7 +578,7 @@ def active_tests():
     cur_date = datetime.date.today()
     for test in tests:
         start_time_obj = datetime.datetime.strptime(test['config']['start'], '%m/%d/%Y')
-        end_time_obj = datetime.datetime.strptime(test['config']['start'], '%m/%d/%Y')
+        end_time_obj = datetime.datetime.strptime(test['config']['end'], '%m/%d/%Y')
         #Too soon or too late -> ignore
         if (start_time_obj.date() > cur_date) or (end_time_obj.date() < cur_date):
             tests.remove(test)
@@ -588,7 +588,7 @@ def active_tests():
         if 'open' in request.form:
           for test in tests:
               if test['config']['id'] == int(request.form['open']):
-                  
+                  pass
 
     return render_template('active_tests.html', profile=session, tests=tests)
 
