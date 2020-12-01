@@ -14,10 +14,10 @@ app = Flask(__name__)
 app.secret_key = 'prdel'
 
 #SqlAlchemy Database Configuration With Mysql
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:VelkaPrdel@localhost/iis'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://root:VelkaPrdel@localhost/iis')
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis')
 db=scoped_session(sessionmaker(bind=engine))
 metadata = sq.MetaData()
 # Intialize MySQL
