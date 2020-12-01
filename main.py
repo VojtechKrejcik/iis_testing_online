@@ -96,10 +96,10 @@ def add_user():
                 flash(f'Login information for {form.name.data} {form.surname.data} are:\nEmail: {form.email.data}\nPassword: {password}', 'success')
                 return redirect(url_for('home'))
             else:
-                flash("Email is already used")
+                flash("Email is already used", 'danger')
                 return redirect(url_for('add_user'))   
         else:
-            flash("not valid values")
+            flash("not valid values", 'danger')
             return redirect(url_for('add_user'))
 
 
@@ -114,15 +114,14 @@ def changeName():
     form = ChangeNameForm(request.form)
     if request.method == "POST":
         if not form.validate():
-            flash("something went wrong", form.name.data)
+            flash("something went wrong", 'danger')
         db.execute(f"""update `accounts` 
                     set `surname`='{form.surname.data}',
                     set `name`='{form.name.data}'
                     where id = {session['id']}""")
         db.commit()        
-        flash('surname changed!')
+        flash('surname changed!', 'success')
         return render_template('change_email.html', profile=session, form=form)
-    flash("something went wrong")
     return render_template('change_name.html', profile=session, form=form)
 
 @app.route('/home/settings/change_password', methods=['GET','POST'])
@@ -130,12 +129,12 @@ def changePassword():
     form = ChangePasswordForm(request.form)
     if request.method == "POST":
         if not form.validate():
-            flash("something went wrong", form.password.data)
+            flash("something went wrong", 'danger')
         db.execute(f"""update `accounts` 
                     set `password`='{form.password.data}'
                     where id = {session['id']}""")
         db.commit()        
-        flash('Password changed!')
+        flash('Password changed!', 'succes')
         return render_template('change_password.html', profile=session, form=form)
 
     else:
@@ -144,16 +143,42 @@ def changePassword():
 @app.route('/home/settings/change_email', methods=['GET','POST'])
 def changeEmail():
     form = ChangeEmailForm(request.form)
+    if request.method == "GET":
+        return render_template('change_email.html', profile=session, form=form)
+
     if request.method == "POST":
         if not form.validate():
-            flash("something went wrong", form.email.data)
+            flash("something went wrong", 'danger')
         if None == db.execute("SELECT * FROM accounts WHERE email=:email",{"email":form.email.data}).fetchone():
             db.execute(f"""update `accounts` 
                         set `email`='{form.email.data}'
                         where id = {session['id']}""")
             db.commit()        
-            flash('email changed!')
+            flash('email changed!', 'success')
             return render_template('change_email.html', profile=session, form=form)
-    flash("something went wrong")
+    flash("something went wrong", 'danger')
     return render_template('change_email.html', profile=session, form=form)
 
+@app.route('/home/manage_users', methods=['GET','POST'])
+def manage_users():
+    if session['status'] != 'admin':
+        flash("Acces denied", 'danger')
+        return redirect(url_for('home'))
+
+    table = db.execute("select * from accounts")
+
+    return render_template('manage_users.html', profile=session, users=table)
+
+@app.route('/home/remove_user/<string:id>')
+def remove_user(id):
+    flash(id)
+    print(db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone(), file=sys.stderr)
+    #print(db.execute(f'select * from accounts where id={id})'))
+    return render_template('remove_user.html', profile=session)
+
+@app.route('/home/change_user/<string:id>')
+def change_user(id):
+    flash(id)
+    print(db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone(), file=sys.stderr)
+    #print(db.execute(f'select * from accounts where id={id})'))
+    return render_template('change_user.html', profile=session)

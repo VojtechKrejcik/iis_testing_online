@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{%  block content  %}
+
+<div class="profile_table">
+    <h1>Users</h1>
+    <table style="width:100%; border:3px solid black">
+        <tr style="border:3px solid black">
+            <th>id</th>
+            <th>password</th> 
+            <th>name</th>
+            <th>surname</th>
+            <th>email</th>
+            <th>status</th>
+            <th>options</th>
+          </tr>
+    {%for user in users%}
+        <tr style="border:1px solid black">
+            <th>{{user[0]}}</th>
+            <th style="width: 150px;"><a class="show_password"><i class="fa fa-eye" aria-hidden="true"></i></a><a class="password_cell"> &nbsp &nbsp {{user[1]}}</a></th> 
+            <th>{{user[2]}}</th>
+            <th>{{user[3]}}</th>
+            <th>{{user[4]}}</th>
+            <th>{{user[5]}}</th>
+            <th><a href="{{ url_for('remove_user',id = user[0])}}"><i class="fas fa-trash-alt"></i></a> <a href="{{ url_for('change_user',id = user[0])}}"><i class="fas fa-cog"></i></a></th>
+        </tr>
+    {%endfor%}
+    </table>
+</div>
+{% endblock  %}
