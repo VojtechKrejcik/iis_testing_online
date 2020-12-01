@@ -1,0 +1,9 @@
+flask_wtf
+wtforms
+flask
+regex
+secrets
+sys
+sqlalchemy
+flask_sqlalchemy
+pymysql
