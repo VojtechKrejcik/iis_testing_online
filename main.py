@@ -160,6 +160,8 @@ def changeEmail():
 
 @app.route('/create_test', methods=['GET','POST'])
 def create_test():
+    #session.pop('test_config',None)
+    #session.pop('questions',None)
     #Add forms
     configform = TestConfigForm(request.form)
     fullform = FullTextQuestionForm(request.form)
@@ -169,7 +171,7 @@ def create_test():
     if 'test_config' in session:
         config = session['test_config']
     else:
-        config = {"name": " ",
+        config = {"name": "",
                   "start": "",
                   "end": "",
                   "question_num": "1"
@@ -186,8 +188,8 @@ def create_test():
             if request.form['create'] == 'Create test':
                 #save config to session
                 config['name'] = configform.name.data
-                config['start'] = str(configform.start_date.data)
-                config['end'] = str(configform.end_date.data)
+                config['start'] = configform.start_date.data
+                config['end'] = configform.end_date.data
                 config['question_num'] = configform.question_num.data
                 session['test_config'] = config
             #Question creation buttons
@@ -233,26 +235,30 @@ def create_test():
             if request.form['update'] == 'Update test':
                 #save config to session
                 config['name'] = configform.name.data
-                config['start'] = str(configform.start_date.data)
-                config['end'] = str(configform.end_date.data)
+                config['start'] = configform.start_date.data
+                config['end'] = configform.end_date.data
                 config['question_num'] = configform.question_num.data
                 session['test_config'] = config
         #Save test
-        if 'save' in request.form:
+        """if 'save' in request.form:
             if request.form['save'] == 'Save test':
+                config['name'] = configform.name.data
+                config['start'] = configform.start_date.data
+                config['end'] = configform.end_date.data
+                config['question_num'] = configform.question_num.data
                 #validate forms
                 if configform.start_date.validate(request.form) and configform.end_date.validate(request.form) and configform.question_num.validate(request.form):
                     #save to DB
-                    #db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{config['start']}','{config['end']}','{session['id']}')")
-                    #tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
+                    db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{config['start']}','{config['end']}','{session['id']}')")
+                    tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
                     #save JSON
-                    #test = dict()
-                    #test['config'] = config
-                    #test['questions'] = questions
-                    #with open(f"test_templates/test_template{tid[0]}.json","w") as testfile:
-                    #    json.dump(test,testfile)
-                    #db.execute(f"UPDATE `test_template` SET `file`='test_templates/test_template{tid[0]}' WHERE test_id = {tid[0]}")
-                    #db.commit()
+                    test = dict()
+                    test['config'] = config
+                    test['questions'] = questions
+                    with open(f"test_templates/test_template{tid[0]}.json","w") as testfile:
+                        json.dump(test,testfile)
+                    db.execute(f"UPDATE `test_template` SET `file`='test_templates/test_template{tid[0]}' WHERE test_id = {tid[0]}")
+                    db.commit()
                     #pop all from session
                     session.pop('test_config',None)
                     session.pop('questions',None)
@@ -262,7 +268,7 @@ def create_test():
                         "question_num": "1"
                         }
                 #return to previous state TODO: feedback flash
-        #Cancel
+        #Cancel"""
         if configform.cancel.data:
             #pop all data from session
             session.pop('test_config',None)
@@ -280,8 +286,11 @@ def create_test():
             return render_template('create_abcd.html',profile=session,form=abcfrom)
 
     
-    #prefill the forms back
+    #prefill the forms back 
+    print(config,file=sys.stderr)
+    #print(session['test_config'],file=sys.stderr) 
     configform.name.data = config["name"]
     configform.start_date.data = config["start"]
     configform.end_date.data = config["end"]
+    configform.question_num.data = config["question_num"]
     return render_template('create_test.html', profile=session, config=configform, questions=questions)
