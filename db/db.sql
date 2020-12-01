@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `registrations` (
 	PRIMARY KEY (`person_id`, `test_id`,`person_type`)
 );
 
-INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('prdel', 'Pepik', 'Prdelka', 'admin@test.com','admin');
-INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('prdel', 'Ondra', 'Ouvajs', 'student@test.com','student');
-INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('prdel', 'Karel', 'Karotka', 'assistent@test.com','assistent');
-INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('prdel', 'Tonda', 'Tupec', 'profesor@test.com','profesor');
+INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('admin', 'Pepik', 'Prdelka', 'admin@test.com','admin');
+INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('student', 'Ondra', 'Ouvajs', 'student@test.com','student');
+INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('assistent', 'Karel', 'Karotka', 'assistent@test.com','assistent');
+INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('profesor', 'Tonda', 'Tupec', 'profesor@test.com','profesor');
