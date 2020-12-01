@@ -279,6 +279,8 @@ def create_test():
                   "question_num": "1" 
                 }
         if configform.add_full.data:
+            if 'test_config' in session:
+                print(f"session: {session['test_config']}",file=sys.stderr)
             return render_template('create_full.html',profile=session,form=fullform)
         if configform.add_num.data:
             return render_template('create_num.html',profile=session,form=numform)
@@ -287,10 +289,11 @@ def create_test():
 
     
     #prefill the forms back 
-    print(config,file=sys.stderr)
-    #print(session['test_config'],file=sys.stderr) 
+    print(f"config: {config}",file=sys.stderr)
+    if 'test_config' in session:
+        print(f"session: {session['test_config']}",file=sys.stderr) 
     configform.name.data = config["name"]
-    configform.start_date.data = config["start"]
-    configform.end_date.data = config["end"]
+    configform.start_date.data = str(config["start"])
+    configform.end_date.data = str(config["end"])
     configform.question_num.data = config["question_num"]
     return render_template('create_test.html', profile=session, config=configform, questions=questions)
