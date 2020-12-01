@@ -19,7 +19,7 @@ app.secret_key = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis',pool_size=20, max_overflow=0)
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis',pool_size=200, max_overflow=0)
 db=scoped_session(sessionmaker(bind=engine))
 metadata = sq.MetaData()
 # Intialize MySQL
@@ -542,3 +542,6 @@ def approve_student():
                   assistants.remove(assistant)
 
     return render_template('approve_student.html', profile=session, students=assistants)
+
+
+db.commit()
