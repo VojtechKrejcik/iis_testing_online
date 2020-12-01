@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>{{ question['question']}}</h1>
+{% if question['type'] == 'abcd' %}
+    A: {{question['a']}}<br>
+    B: {{question['b']}}<br>
+    C: {{question['c']}}<br>
+    D: {{question['d']}}<br>
+{% endif %}
+<form method="POST" action="">
+    {{ answer.answer(class="form-control form-control-lg form-control-lg is-invalid") }}
+    {{ answer.submit(class="btn btn-danger") }}
+</form>
+{% endblock %}

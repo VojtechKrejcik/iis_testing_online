@@ -585,10 +585,22 @@ def active_tests():
             continue
 
     if request.method == "POST":
+        last_test=-1
+        last_question=-1
+        answer = AnwerForm(request.form)
         if 'open' in request.form:
           for test in tests:
               if test['config']['id'] == int(request.form['open']):
+                  last_test = test['config']['id']
                   return render_template('test.html', profile=session, test=test)
-
+        if 'answer_q' in request.form:
+            for question in tests[last_test]['questions']:
+                if question['id'] == int(request.form['answer_q']):
+                    last_question = question['id']
+                    return render_template('question.html', profile=session, question=question, answer = answer)
+        if answer.submit.data:
+            tests[last_test]['questions'][last_question]['answer'] = answer.answer.data
+            with open(test_files[last_test],"w") as f:
+                json.dump(tests[last_test],f)
     return render_template('active_tests.html', profile=session, tests=tests)
 
