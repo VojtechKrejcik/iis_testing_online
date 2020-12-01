@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 #from flask_mysqldb import MySQL
-from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordForm, ChangeUserDataForm
+from forms import *
 #import MySQLdb.cursors
 import re
 import sys
+import os
+import json
+import datetime
 import sqlalchemy as sq
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import scoped_session,sessionmaker, Session
@@ -158,6 +161,157 @@ def changeEmail():
     flash("something went wrong", 'danger')
     return render_template('change_email.html', profile=session, form=form)
 
+@app.route('/create_test', methods=['GET','POST'])
+def create_test():
+    #Add forms
+    configform = TestConfigForm(request.form)
+    fullform = FullTextQuestionForm(request.form)
+    numform = NumQuestionForm(request.form)
+    abcfrom = AbcQuestionForm(request.form)
+    #Check for active session
+    if 'test_config' in session:
+        config = session['test_config']
+    else:
+        config = {"name": "",
+                  "start": "01/01/1111",
+                  "end": "01/01/1111",
+                  "question_num": "1"
+                }
+    if 'questions' in session:
+        questions = session['questions']
+    else:
+        questions = list()
+
+    if request.method == "POST":
+        #Continue depending on the button used
+        #create test
+        if 'create' in request.form:
+            if request.form['create'] == 'Create test':
+                #save config to session
+                config['name'] = configform.name.data
+                config['start'] = configform.start_date.data.strftime("%m/%d/%Y")
+                config['end'] = configform.end_date.data.strftime("%m/%d/%Y")
+                config['question_num'] = configform.question_num.data
+                session['test_config'] = config
+            #Question creation buttons
+            elif request.form['create'] == 'Create full question':
+                question = dict()
+                question['id'] = questions.__len__()
+                question['type'] = "full"
+                question['question'] = fullform.question.data
+                question['value'] = fullform.value.data
+                questions.append(question)
+                session['questions'] = questions
+            elif request.form['create'] == 'Create number question':
+                question = dict()
+                question['id'] = questions.__len__()
+                question['type'] = "number"
+                question['question'] = numform.question.data
+                question['value'] = numform.value.data
+                question['answer'] = numform.answer.data
+                questions.append(question)
+                session['questions'] = questions
+            elif request.form['create'] == 'Create abcd question':
+                question = dict()
+                question['id'] = questions.__len__()
+                question['type'] = "abcd"
+                question['question'] = abcfrom.question.data
+                question['value'] = abcfrom.value.data
+                question['a'] = abcfrom.a.data
+                question['b'] = abcfrom.b.data
+                question['c'] = abcfrom.c.data
+                question['d'] = abcfrom.d.data
+                question['answer'] = abcfrom.answer.data
+                questions.append(question)
+                session['questions'] = questions
+        #Remove question
+        if 'remove' in request.form:          
+            for question in questions:
+                if question['id'] == int(request.form['remove']):
+                    questions.remove(question)
+                    session['questions'] = questions
+                    break
+        #Update test
+        if 'update' in request.form:
+            if request.form['update'] == 'Update test':
+                #save config to session
+                config['name'] = configform.name.data
+                config['start'] = configform.start_date.data.strftime("%m/%d/%Y")
+                config['end'] = configform.end_date.data.strftime("%m/%d/%Y")
+                config['question_num'] = configform.question_num.data
+                session['test_config'] = config
+        #Save test
+        if 'save' in request.form:
+            if request.form['save'] == 'Save test':
+                config['name'] = configform.name.data
+                config['start'] = configform.start_date.data.strftime("%m/%d/%Y")
+                config['end'] = configform.end_date.data.strftime("%m/%d/%Y")
+                config['question_num'] = configform.question_num.data
+                #validate forms
+                if configform.start_date.validate(request.form) and configform.end_date.validate(request.form) and configform.question_num.validate(request.form):
+                    start = datetime.datetime.strptime(config['start'], '%m/%d/%Y')
+                    start = start.strftime("%Y-%m-%d")
+                    end = datetime.datetime.strptime(config['end'], '%m/%d/%Y')
+                    end = end.strftime("%Y-%m-%d")
+                    #save to DB
+                    if not 'edit' in session:
+                        db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{start}','{end}','{session['id']}')")
+                        tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
+                    #update DB (editing from another page)
+                    else:
+                        tid = (session['test_config']['id'],None)
+                        db.execute(f"UPDATE `test_template` SET `active_from`='{start}',`active_to`='{end}' WHERE test_id = {tid[0]}")
+
+                    #save JSON
+                    test = dict()
+                    config['id'] = tid[0]
+                    test['config'] = config
+                    test['questions'] = questions
+                    with open(f"test_templates/test_template{tid[0]}.json","w") as testfile:
+                        json.dump(test,testfile)
+                    db.execute(f"UPDATE `test_template` SET `file`='test_templates/test_template{tid[0]}.json' WHERE test_id = {tid[0]}")
+                    db.commit()
+                    #pop all from session
+                    session.pop('test_config',None)
+                    session.pop('questions',None)
+                    session.pop('edit',None)
+                    config = {"name": "",
+                        "start": "01/01/1111",
+                        "end": "01/01/1111",
+                        "question_num": "1"
+                        }
+                #return to previous state TODO: feedback flash
+        #Cancel
+        if configform.cancel.data:
+            #pop all data from session
+            session.pop('test_config',None)
+            session.pop('questions',None)
+            session.pop('edit',None)
+            config = {"name": "",
+                  "start": "01/01/1111",
+                  "end": "01/01/1111",
+                  "question_num": "1" 
+                }
+        if configform.add_full.data:
+            return render_template('create_full.html',profile=session,form=fullform)
+        if configform.add_num.data:
+            return render_template('create_num.html',profile=session,form=numform)
+        if configform.add_abc.data:
+            return render_template('create_abcd.html',profile=session,form=abcfrom)
+
+    
+    #prefill the forms back 
+    print(f"config: {config}",file=sys.stderr)
+    if 'test_config' in session:
+        print(f"session: {session['test_config']}",file=sys.stderr) 
+
+    start_time_obj = datetime.datetime.strptime(config['start'], '%m/%d/%Y')
+    end_time_obj = datetime.datetime.strptime(config['end'], '%m/%d/%Y')
+    configform.name.data = config['name']
+    configform.start_date.data = start_time_obj
+    configform.end_date.data = end_time_obj
+    configform.question_num.data = config['question_num']
+    return render_template('create_test.html', profile=session, config=configform, questions=questions)
 @app.route('/home/manage_users', methods=['GET','POST'])
 def manage_users():
     if session['status'] != 'admin':
@@ -184,7 +338,7 @@ def remove_user(id):
 @app.route('/home/change_user/<string:id>', methods=['GET','POST'])
 def change_user(id):
     form = ChangeUserDataForm(request.form)
-    user = db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone();
+    user = db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone()
     if request.method == "GET":
         form.password.data = user[1]
         form.confirm_password.data = user[1]
@@ -214,3 +368,177 @@ def change_user(id):
         return redirect(url_for('manage_users'))
 
     return render_template('change_user.html', profile=session, form=form)
+
+@app.route("/home/my_tests",methods=['GET','POST'])
+def my_tests():
+    #Get user ID
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `file` FROM `test_template` WHERE `creator` = {user_id}")
+    test_files = [row[0] for row in result] 
+    #Print for all results in template
+    tests = list()
+    for test_file in test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+
+    #find approved assistants for print
+
+    if request.method == "POST":
+        #Edit tests
+        if 'edit' in request.form:
+            for test in tests:
+                if test['config']['id'] == int(request.form['edit']):
+                    #Fill session
+                    session['test_config'] = test['config']
+                    session['questions'] = test['questions']
+                    session['edit'] = 1
+                    return redirect(url_for('create_test'))
+        if 'remove' in request.form:
+            for test in tests:
+                if test['config']['id'] == int(request.form['remove']):
+                    db.execute(f"DELETE FROM `test_template` WHERE `test_id` = {test['config']['id']}")
+                    db.commit()
+                    os.remove(f"test_templates/test_template{test['config']['id']}.json")
+                    tests.remove(test)
+    return render_template('my_tests.html', profile=session, tests=tests)
+
+@app.route("/home/apply",methods=['GET','POST'])
+def assistant_apply():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `file` FROM `test_template`")
+    test_files = [row[0] for row in result]
+    #Get info on tests
+    tests = list()
+    for test_file in test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'assistant'")
+    applied = [row[0] for row in result]
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'assistant' AND `approved`='1'")
+    approved = [row[0] for row in result]
+    if request.method == "POST":
+        #Apply tests
+        if 'apply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['apply']):
+                  #input into DB
+                  db.execute(f"INSERT INTO `registrations` (`person_id`, `person_type`, `test_id` ,`approved`,`score`) VALUES ('{user_id}','assistant','{test['config']['id']}','0','0')")
+                  db.commit()
+                  applied.append(test['config']['id'])
+        #Unnaply from tests
+        if 'unapply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['unapply']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='assistant'")
+                  db.commit()
+                  applied.remove(test['config']['id'])
+                  
+    return render_template('assistant_apply.html', profile=session, tests=tests, applied=applied, approved=approved)
+
+@app.route("/home/register",methods=['GET','POST'])
+def student_register():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `file` FROM `test_template`")
+    test_files = [row[0] for row in result]
+    #Get info on tests
+    tests = list()
+    for test_file in test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'student'")
+    applied = [row[0] for row in result]
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `person_type` = 'student' AND `approved`='1'")
+    approved = [row[0] for row in result]
+    if request.method == "POST":
+        #Apply tests
+        if 'apply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['apply']):
+                  #input into DB
+                  db.execute(f"INSERT INTO `registrations` (`person_id`, `person_type`, `test_id` ,`approved`,`score`) VALUES ('{user_id}','student','{test['config']['id']}','0','0')")
+                  db.commit()
+                  applied.append(test['config']['id'])
+        #Unnaply from tests
+        if 'unapply' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['unapply']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='student'")
+                  db.commit()
+                  applied.remove(test['config']['id'])
+                  
+    return render_template('student_register.html', profile=session, tests=tests, applied=applied, approved=approved)
+
+@app.route("/home/approveass",methods=['GET','POST'])
+def approve_assistant():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}' AND `person_type` = 'assistant'")
+    assistants = list()
+    for row in result:
+        assistant = dict()
+        assistant['id'] = row[0]
+        assistant['name'] = row[1]
+        assistant['surname'] = row[2]
+        with open(row[3],"r") as f:
+            assistant['test'] = json.load(f)
+        assistants.append(assistant)
+
+    if request.method == "POST":
+        #Approve
+        if 'approve' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['approve']):
+                  #input into DB
+                  db.execute(f"UPDATE `registrations` SET `approved` = '1' WHERE `person_id`={assistant['id']} and `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+        #Deny
+        if 'deny' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['deny']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = {assistant['id']} AND `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+
+    return render_template('approve_assistant.html', profile=session, assistants=assistants)
+
+@app.route("/home/approvestud",methods=['GET','POST'])
+def approve_student():
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}'")
+    assistants = list()
+    for row in result:
+        assistant = dict()
+        assistant['id'] = row[0]
+        assistant['name'] = row[1]
+        assistant['surname'] = row[2]
+        with open(row[3],"r") as f:
+            assistant['test'] = json.load(f)
+        assistants.append(assistant)
+
+    if request.method == "POST":
+        #Approve
+        if 'approve' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['approve']):
+                  #input into DB
+                  db.execute(f"UPDATE `registrations` SET `approved` = '1' WHERE `person_id`={assistant['id']} and `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+        #Deny
+        if 'deny' in request.form:
+            for assistant in assistants:
+              if assistant['test']['config']['id'] == int(request.form['deny']):
+                  #input into DB
+                  db.execute(f"DELETE FROM `registrations` WHERE `person_id` = {assistant['id']} AND `test_id` = {assistant['test']['config']['id']}")
+                  db.commit()
+                  assistants.remove(assistant)
+
+    return render_template('approve_student.html', profile=session, students=assistants)

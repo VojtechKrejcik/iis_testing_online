@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div id="preview">
+    <h1>New test</h1>
+</div>
+<div id="config">
+<h2>Test configuration</h2>
+    <form method="POST" action="">
+        <div class="profile_table"> <!--TODO: Change and style the page-->
+            <div class="form-group">
+                <!--Test name-->
+                <h3 color="black">{{ config.name.label }}</h3>
+                {% if config.name.errors %}
+                    {{ config.name(class="form-control form-control-lg form-control-lg is-invalid") }}
+                {% else %}
+                    {{ config.name(class="form-control form-control-lg") }}
+                {% endif %}
+                <!--Starting Date-->
+                <h3 color="black">{{ config.start_date.label }} </h3> [dd/mm/yy]
+                {% if config.start_date.errors %}
+                    {{ config.start_date(class="form-control form-control-lg form-control-lg is-invalid") }}
+                {% else %}
+                    {{ config.start_date(class="form-control form-control-lg") }}
+                {% endif %}
+                <!--Ending Date-->
+                <h3 color="black">{{ config.end_date.label }} </h3>[dd/mm/yy]
+                {% if config.end_date.errors %}
+                    {{ config.end_date(class="form-control form-control-lg form-control-lg is-invalid") }}
+                {% else %}
+                    {{ config.end_date(class="form-control form-control-lg") }}
+                {% endif %}
+                <!--Questions per test-->
+                <h3 color="black">{{ config.question_num.label }} </h3>
+                {% if config.question_num.errors %}
+                    {{ config.question_num(class="form-control form-control-lg form-control-lg is-invalid") }}
+                {% else %}
+                    {{ config.question_num(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            {% if not 'test_config' in profile %}
+            <div class="form-group">
+                <input type="submit" name="create" value="Create test" class="btn btn-danger">
+            </div>
+            {% else %}
+            <div class="form-group">
+                <input type="submit" name="save" value="Save test" class="btn btn-danger">
+                <input type="submit" name="update" value="Update test" class="btn btn-danger">
+                {{ config.cancel(class="btn btn-danger")}}
+            </div>
+            <hr>
+                <h2>Questions</h2>
+                <div class="form-group">
+                    <table>
+                        <td>{{ config.add_full(class="btn btn-danger")}}</td>
+                        <td>{{ config.add_num(class="btn btn-danger")}}</td>
+                        <td>{{ config.add_abc(class="btn btn-danger")}}</td>
+                    </table>
+                </div>
+                <!--Generate questions to show-->
+                {% for question in questions %}
+                    <div class="question">
+                        <hr>
+                        Question: {{ question['question'] }} <button name="remove" value={{ question['id'] }} type="submit">X</button>
+                        <br>
+                        Value: {{ question['value'] }}
+                        {% if question['type'] == 'number' %}
+                            <br>
+                            Answer: {{ question['answer'] }}
+                        {% elif question['type'] == 'abcd' %}
+                            <br>
+                            A: {{ question['a'] }}
+                            <br>
+                            B: {{ question['b'] }}
+                            <br>
+                            C: {{ question['c'] }}
+                            <br>
+                            D: {{ question['d'] }}
+                            <br>
+                            Answer: {{ question['answer'] }}
+                        {% endif %}
+                        <hr>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+</div>
+{% endblock %}

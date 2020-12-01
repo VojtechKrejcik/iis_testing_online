@@ -158,7 +158,15 @@ body.loggedin {
     margin: 1cm;
     border-style: solid;
     border-color: #A3080C;
+}
 
+.question{
+    width: 80%;
+    padding: 1cm;
+    margin: 1cm;
+    vertical-align: center;
+    border-style: solid;
+    border-color: #A3080C;
 }
 
 .password_cell{

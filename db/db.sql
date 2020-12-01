@@ -15,40 +15,30 @@ CREATE TABLE IF NOT EXISTS `accounts` (
 CREATE TABLE IF NOT EXISTS `test_template` (
 	`test_id` int(11) NOT NULL AUTO_INCREMENT,
 	`active_from` DATETIME NOT NULL,
-	`active to` DATETIME NOT NULL,
+	`active_to` DATETIME NOT NULL,
 	`creator` int DEFAULT null,
+	`file` varchar(255) DEFAULT null,
 
 
 	CONSTRAINT `creator_fk` FOREIGN KEY (`creator`)
 		REFERENCES `accounts`(`id`),
 	PRIMARY KEY (`test_id`)
 );
-
-CREATE TABLE IF NOT EXISTS `test_assigned` (
-	`assigned_test_id` int(11) not null,
-	`template_test_id` int(11) not null,
-	`student_id` int(11) not null,
-	`score` int(11),
-	`subbed` TIMESTAMP,
-	CONSTRAINT `template_test_id_fk` FOREIGN KEY (`template_test_id`)
-		REFERENCES `test_template`(`test_id`),
-
-	CONSTRAINT `student_id_fk` FOREIGN KEY (`student_id`) 
-		REFERENCES `accounts`(`id`),
-
-	PRIMARY KEY (`assigned_test_id`)
      
-
-);
-CREATE TABLE IF NOT EXISTS `assistent_test` (
-	`assistent_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `registrations` (
+	`person_id` int(11) NOT NULL,
+	`person_type` varchar(10) NOT NULL,
 	`test_id` int(11) NOT NULL,
-	CONSTRAINT `assigned_test_id_fk` FOREIGN KEY (`test_id`)
-		REFERENCES `test_assigned`(`assigned_test_id`),
+	`test_copy` varchar(255) DEFAULT null,
+	`approved` int(1) NOT NULL,
+	`score` int(10) NOT NULL,
 
-	CONSTRAINT `assitent_id_fk` FOREIGN KEY (`assistent_id`) 
+	CONSTRAINT `person_id_fk` FOREIGN KEY (`person_id`) 
 		REFERENCES `accounts`(`id`),
-	PRIMARY KEY (`assistent_id`, `test_id`)
+	CONSTRAINT `test_id_fk` FOREIGN KEY (`test_id`) 
+		REFERENCES `test_template`(`test_id`),
+		
+	PRIMARY KEY (`person_id`, `test_id`,`person_type`)
 );
 
 INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES ('prdel', 'Pepik', 'Prdelka', 'admin@test.com','admin');
