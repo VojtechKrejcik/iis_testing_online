@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>{{ test['config']['name']}}</h1>
+<div id=questions>
+    {% for question in test['questions'] %}
+        <div class="profile_table">
+            <h2>{{question['question']}}</h2>
+            {% if question['type'] == 'abcd' %}
+                A: {{question['a']}}<br>
+                B: {{question['b']}}<br>
+                C: {{question['c']}}<br>
+                D: {{question['d']}}
+            {% endif %}
+            <form method="POST" action="">
+                <button name="answer" value={{ question['id'] }} type="submit" class="btn btn-danger">Answer</button>
+                </form>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

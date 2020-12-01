@@ -588,7 +588,7 @@ def active_tests():
         if 'open' in request.form:
           for test in tests:
               if test['config']['id'] == int(request.form['open']):
-                  pass
+                  return render_template('test.html', profile=session, test=test)
 
     return render_template('active_tests.html', profile=session, tests=tests)
 
