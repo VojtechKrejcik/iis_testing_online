@@ -24,3 +24,12 @@ class ChangePasswordForm(Form):
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Change')
+
+class ChangeUserDataForm(Form):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=20)])
+    surname = StringField('Surname', validators=[DataRequired(), Length(min=2, max=20)])
+    status = SelectField('Status', choices=["admin","profesor","asistent", "student"])
+    password = PasswordField('Password')
+    confirm_password = PasswordField('Confirm Password', validators=[EqualTo('password')])
+    submit = SubmitField('Change user s data')

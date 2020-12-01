@@ -21,7 +21,7 @@
             <th>{{user[3]}}</th>
             <th>{{user[4]}}</th>
             <th>{{user[5]}}</th>
-            <th><a href="{{ url_for('remove_user',id = user[0])}}"><i class="fas fa-trash-alt"></i></a> <a href="{{ url_for('change_user',id = user[0])}}"><i class="fas fa-cog"></i></a></th>
+            <th><a href="{{ url_for('remove_user',id = user[0])}}" style="color: #A3080C;"><i class="fas fa-trash-alt" ></i></a>&nbsp &nbsp &nbsp &nbsp<a href="{{ url_for('change_user',id = user[0])}}" style="color: #A3080C;"><i class="fas fa-cog"></i></a></th>
         </tr>
     {%endfor%}
     </table>

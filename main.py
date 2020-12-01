@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 #from flask_mysqldb import MySQL
-from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordForm
+from forms import AddUserForm, ChangeEmailForm, ChangeNameForm, ChangePasswordForm, ChangeUserDataForm
 #import MySQLdb.cursors
 import re
 import secrets
@@ -134,7 +134,7 @@ def changePassword():
                     set `password`='{form.password.data}'
                     where id = {session['id']}""")
         db.commit()        
-        flash('Password changed!', 'succes')
+        flash('Password changed!', 'success')
         return render_template('change_password.html', profile=session, form=form)
 
     else:
@@ -171,14 +171,47 @@ def manage_users():
 
 @app.route('/home/remove_user/<string:id>')
 def remove_user(id):
-    flash(id)
-    print(db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone(), file=sys.stderr)
-    #print(db.execute(f'select * from accounts where id={id})'))
-    return render_template('remove_user.html', profile=session)
+    print(id, session['id'], file = sys.stderr)
+    if int(id) == int(session['id']):
+        print("i am inside", file = sys.stderr)
+        flash("You cant remove yourself", 'danger')
+        return redirect(url_for('manage_users'))
+    else:
+        flash("User removed", 'success')
+        db.execute("DELETE FROM accounts WHERE id=:id",{"id":id})
+        db.commit()
+        return redirect(url_for('manage_users'))
 
-@app.route('/home/change_user/<string:id>')
+@app.route('/home/change_user/<string:id>', methods=['GET','POST'])
 def change_user(id):
-    flash(id)
-    print(db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone(), file=sys.stderr)
-    #print(db.execute(f'select * from accounts where id={id})'))
-    return render_template('change_user.html', profile=session)
+    form = ChangeUserDataForm(request.form)
+    user = db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone();
+    if request.method == "GET":
+        form.password.data = user[1]
+        form.confirm_password.data = user[1]
+        form.name.data = user[2]
+        form.surname.data = user[3]
+        form.email.data = user[4]
+        form.status.data = user[5]
+        return render_template('change_user.html', profile=session, form=form)
+    if request.method == "POST":
+        if not form.validate():
+            flash("something went wrong", 'danger')
+            return render_template('change_user.html', profile=session, form=form)
+        if form.password.data == '':
+            password = user[1]
+        else:
+             password = form.password.data
+        db.execute(f"""update `accounts` 
+                    set 
+                    `password`='{password}',
+                    `name`='{form.name.data}',
+                    `surname`='{form.surname.data}',
+                    `email`='{form.email.data}',
+                    `status`='{form.status.data}'
+                    where id = {id};""")
+        db.commit()        
+        flash('User changed!', 'success')
+        return redirect(url_for('manage_users'))
+
+    return render_template('change_user.html', profile=session, form=form)
