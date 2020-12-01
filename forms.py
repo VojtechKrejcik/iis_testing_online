@@ -61,3 +61,6 @@ class AbcQuestionForm(Form):
     b = StringField('Option b')
     c = StringField('Option c')
     d = StringField('Option d')
+
+class AnwerForm(Form):
+    answer = StringField('Answer', validators=[DataRequired(),Length(min=1)])

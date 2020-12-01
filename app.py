@@ -14,12 +14,17 @@ from sqlalchemy.orm import scoped_session,sessionmaker, Session
 
 app = Flask(__name__)
 app.secret_key = 'prdel'
-
+"""
 #SqlAlchemy Database Configuration With Mysql
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis')
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis')"""
+#SqlAlchemy Database Configuration With Mysql
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:prdel@localhost/iis'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+engine = sq.create_engine('mysql+pymysql://root:prdel@localhost/iis')
 db=scoped_session(sessionmaker(bind=engine))
 metadata = sq.MetaData()
 # Intialize MySQL
@@ -200,6 +205,7 @@ def create_test():
                 question['type'] = "full"
                 question['question'] = fullform.question.data
                 question['value'] = fullform.value.data
+                question['earned'] = 0
                 questions.append(question)
                 session['questions'] = questions
             elif request.form['create'] == 'Create number question':
@@ -209,6 +215,7 @@ def create_test():
                 question['question'] = numform.question.data
                 question['value'] = numform.value.data
                 question['answer'] = numform.answer.data
+                question['earned'] = 0
                 questions.append(question)
                 session['questions'] = questions
             elif request.form['create'] == 'Create abcd question':
@@ -217,6 +224,7 @@ def create_test():
                 question['type'] = "abcd"
                 question['question'] = abcfrom.question.data
                 question['value'] = abcfrom.value.data
+                question['earned'] = 0
                 question['a'] = abcfrom.a.data
                 question['b'] = abcfrom.b.data
                 question['c'] = abcfrom.c.data
@@ -382,7 +390,7 @@ def my_tests():
         with open(test_file,"r") as f:
             tests.append(json.load(f))
 
-    #find approved assistants for print
+    #TODO: find approved assistants for print
 
     if request.method == "POST":
         #Edit tests
@@ -401,6 +409,17 @@ def my_tests():
                     db.commit()
                     os.remove(f"test_templates/test_template{test['config']['id']}.json")
                     tests.remove(test)
+        if 'activate' in request.form:
+            for test in tests:
+                if test['config']['id'] == int(request.form['activate']):
+                    result = db.execute(f"SELECT `person_id` FROM `registrations` WHERE `test_id` = {test['config']['id']} AND `person_type` = 'student' AND `approved` = '1'")
+                    sudents =[row[0] for row in result]
+                    for student in sudents:
+                        with open(f"test_students/test_{student}_{test['config']['id']}.json","w") as f:
+                            json.dump(test,f)
+                        db.execute(f"UPDATE `registrations` SET `test_copy` = 'test_students/test_{student}_{test['config']['id']}.json' WHERE `test_id` = '{test['config']['id']}' AND `person_id` = '{student}' AND `person_type` = 'student'")
+                        db.commit()
+
     return render_template('my_tests.html', profile=session, tests=tests)
 
 @app.route("/home/apply",methods=['GET','POST'])
@@ -512,7 +531,7 @@ def approve_assistant():
 def approve_student():
     user_id = session['id']
     #Querry DB
-    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}'")
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `person_type` = 'student'")
     assistants = list()
     for row in result:
         assistant = dict()
@@ -542,3 +561,34 @@ def approve_student():
                   assistants.remove(assistant)
 
     return render_template('approve_student.html', profile=session, students=assistants)
+
+@app.route("/home/active_tests",methods=['GET','POST'])
+def active_tests():
+    #Get user ID
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `test_copy` FROM `registrations` WHERE `person_id` = '{user_id}' AND `approved` = '1' AND `test_copy` is not NULL")
+    test_files = [row[0] for row in result] 
+    #Print for all results in template
+    tests = list()
+    for test_file in test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+   
+    cur_date = datetime.date.today()
+    for test in tests:
+        start_time_obj = datetime.datetime.strptime(test['config']['start'], '%m/%d/%Y')
+        end_time_obj = datetime.datetime.strptime(test['config']['start'], '%m/%d/%Y')
+        #Too soon or too late -> ignore
+        if (start_time_obj.date() > cur_date) or (end_time_obj.date() < cur_date):
+            tests.remove(test)
+            continue
+
+    if request.method == "POST":
+        if 'open' in request.form:
+          for test in tests:
+              if test['config']['id'] == int(request.form['open']):
+                  
+
+    return render_template('active_tests.html', profile=session, tests=tests)
+
