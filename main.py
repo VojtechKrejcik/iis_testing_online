@@ -255,8 +255,14 @@ def create_test():
                     end = datetime.datetime.strptime(config['end'], '%m/%d/%Y')
                     end = end.strftime("%Y-%m-%d")
                     #save to DB
-                    db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{start}','{end}','{session['id']}')")
-                    tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
+                    if not 'edit' in session:
+                        db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{start}','{end}','{session['id']}')")
+                        tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
+                    #update DB (editing from another page)
+                    else:
+                        tid = (session['test_config']['id'],None)
+                        db.execute(f"UPDATE `test_template` SET `active_from`='{start}',`active_to`='{end}'")
+
                     #save JSON
                     test = dict()
                     config['id'] = tid[0]
@@ -269,6 +275,7 @@ def create_test():
                     #pop all from session
                     session.pop('test_config',None)
                     session.pop('questions',None)
+                    session.pop('edit',None)
                     config = {"name": "",
                         "start": "01/01/1111",
                         "end": "01/01/1111",
@@ -280,6 +287,7 @@ def create_test():
             #pop all data from session
             session.pop('test_config',None)
             session.pop('questions',None)
+            session.pop('edit',None)
             config = {"name": "",
                   "start": "01/01/1111",
                   "end": "01/01/1111",
@@ -350,6 +358,7 @@ def my_tests():
                     #Fill session
                     session['test_config'] = test['config']
                     session['questions'] = test['questions']
+                    session['edit'] = 1
                     return redirect(url_for('create_test'))
         if 'remove' in request.form:
             for test in tests:
