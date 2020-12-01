@@ -167,7 +167,7 @@ def create_test():
     if 'test_config' in session:
         config = session['test_config']
     else:
-        config = {"name": "",
+        config = {"name": " ",
                   "start": "",
                   "end": "" 
                 }
@@ -175,16 +175,32 @@ def create_test():
 
     if request.method == "POST":
         #Continue depending on the button used
-        if configform.create.data:
-            #save config to session
-            config['name'] = configform.name.data
-            config['start'] = configform.start_date.data
-            config['end'] = configform.end_date.data
-            session['test_config'] = config
+        #create test
+        if 'create' in request.form:
+            if request.form['create'] == 'Create test':
+                #save config to session
+                config['name'] = configform.name.data
+                config['start'] = configform.start_date.data
+                config['end'] = configform.end_date.data
+                session['test_config'] = config
+        #Update test
+        if 'update' in request.form:
+            if request.form['update'] == 'Update test':
+                #save config to session
+                config['name'] = configform.name.data
+                config['start'] = configform.start_date.data
+                config['end'] = configform.end_date.data
+                session['test_config'] = config
+        #Cancel
+        if configform.cancel.data:
+            #pop all data from session
+            session.pop('test_config',None)
+            config = {"name": " ",
+                  "start": "",
+                  "end": "" 
+                }
         if configform.add_full.data:
             return render_template('create_full.html',profile=session,form=fullform)
-        if configform.cancel.data:
-            session.pop('test_config',None)
         if fullform.create.data:
             #save question
             pass
@@ -192,4 +208,5 @@ def create_test():
     configform.name.data = config["name"]
     configform.start_date.data = config["start"]
     configform.end_date.data = config["end"]
+
     return render_template('create_test.html', profile=session, config=configform)

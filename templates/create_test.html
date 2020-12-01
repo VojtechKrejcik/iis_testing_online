@@ -33,11 +33,11 @@
             </div>
             {% if not 'test_config' in profile %}
             <div class="form-group">
-                {{ config.create(class="btn btn-danger")}}
+                <input type="submit" name="create" value="Create test" class="btn btn-danger">
             </div>
             {% else %}
             <div class="form-group">
-                {{ config.update(class="btn btn-danger")}}
+                <input type="submit" name="update" value="Update test" class="btn btn-danger">
                 {{ config.cancel(class="btn btn-danger")}}
             </div>
             <hr>
