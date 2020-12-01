@@ -5,6 +5,7 @@ from forms import *
 import re
 import secrets
 import sys
+import os
 import json
 import datetime
 import sqlalchemy as sq
@@ -163,8 +164,6 @@ def changeEmail():
 
 @app.route('/create_test', methods=['GET','POST'])
 def create_test():
-    #session.pop('test_config',None)
-    #session.pop('questions',None)
     #Add forms
     configform = TestConfigForm(request.form)
     fullform = FullTextQuestionForm(request.form)
@@ -260,11 +259,12 @@ def create_test():
                     tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
                     #save JSON
                     test = dict()
+                    config['id'] = tid[0]
                     test['config'] = config
                     test['questions'] = questions
                     with open(f"test_templates/test_template{tid[0]}.json","w") as testfile:
                         json.dump(test,testfile)
-                    db.execute(f"UPDATE `test_template` SET `file`='test_templates/test_template{tid[0]}' WHERE test_id = {tid[0]}")
+                    db.execute(f"UPDATE `test_template` SET `file`='test_templates/test_template{tid[0]}.json' WHERE test_id = {tid[0]}")
                     db.commit()
                     #pop all from session
                     session.pop('test_config',None)
@@ -286,8 +286,6 @@ def create_test():
                   "question_num": "1" 
                 }
         if configform.add_full.data:
-            if 'test_config' in session:
-                print(f"session: {session['test_config']}",file=sys.stderr)
             return render_template('create_full.html',profile=session,form=fullform)
         if configform.add_num.data:
             return render_template('create_num.html',profile=session,form=numform)
@@ -330,3 +328,34 @@ def change_user(id):
     print(db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone(), file=sys.stderr)
     #print(db.execute(f'select * from accounts where id={id})'))
     return render_template('change_user.html', profile=session)
+
+@app.route("/home/my_tests",methods=['GET','POST'])
+def my_tests():
+    #Get user ID
+    user_id = session['id']
+    #Querry DB
+    result = db.execute(f"SELECT `file` FROM `test_template` WHERE `creator` = {user_id}")
+    test_files = [row[0] for row in result] 
+    #Print for all results in template
+    tests = list()
+    for test_file in test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+
+    if request.method == "POST":
+        #Edit tests
+        if 'edit' in request.form:
+            for test in tests:
+                if test['config']['id'] == int(request.form['edit']):
+                    #Fill session
+                    session['test_config'] = test['config']
+                    session['questions'] = test['questions']
+                    return redirect(url_for('create_test'))
+        if 'remove' in request.form:
+            for test in tests:
+                if test['config']['id'] == int(request.form['remove']):
+                    db.execute(f"DELETE FROM `test_template` WHERE `test_id` = {test['config']['id']}")
+                    db.commit()
+                    os.remove(f"test_templates/test_template{test['config']['id']}.json")
+                    tests.remove(test)
+    return render_template('my_tests.html', profile=session, tests=tests)

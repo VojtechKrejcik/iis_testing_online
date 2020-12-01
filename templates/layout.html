@@ -19,7 +19,7 @@
                 {% if profile.status == "admin" or profile.status == "professor" %}
                     <h2>Professor</h2>
                     <a href="{{ url_for('create_test') }}" class="sidebar_button">Create test</a>
-                    <a href="#" class="sidebar_button">Test created by me</a>
+                    <a href="{{ url_for('my_tests') }}" class="sidebar_button">Test created by me</a>
                     <a href="#" class="sidebar_button">Authorize assitent</a>
                 {% endif %}
                 {% if profile.status == "admin" or profile.status == "professor" or profile.status == "assistant" %}
