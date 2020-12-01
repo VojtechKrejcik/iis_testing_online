@@ -5,3 +5,4 @@ regex
 sqlalchemy
 flask_sqlalchemy
 pymysql
+email-validator
