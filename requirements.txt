@@ -2,6 +2,7 @@ flask_wtf
 wtforms
 flask
 regex
+pyopenssl
 secrets
 sys
 sqlalchemy
