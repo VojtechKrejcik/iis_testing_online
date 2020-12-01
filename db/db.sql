@@ -15,8 +15,9 @@ CREATE TABLE IF NOT EXISTS `accounts` (
 CREATE TABLE IF NOT EXISTS `test_template` (
 	`test_id` int(11) NOT NULL AUTO_INCREMENT,
 	`active_from` DATETIME NOT NULL,
-	`active to` DATETIME NOT NULL,
+	`active_to` DATETIME NOT NULL,
 	`creator` int DEFAULT null,
+	`file` varchar(255) DEFAULT null,
 
 
 	CONSTRAINT `creator_fk` FOREIGN KEY (`creator`)

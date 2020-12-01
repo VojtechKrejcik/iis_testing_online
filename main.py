@@ -5,6 +5,7 @@ from forms import *
 import re
 import secrets
 import sys
+import json
 import sqlalchemy as sq
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import scoped_session,sessionmaker, Session
@@ -162,16 +163,21 @@ def create_test():
     #Add forms
     configform = TestConfigForm(request.form)
     fullform = FullTextQuestionForm(request.form)
-
+    numform = NumQuestionForm(request.form)
+    abcfrom = AbcQuestionForm(request.form)
     #Check for active session
     if 'test_config' in session:
         config = session['test_config']
     else:
         config = {"name": " ",
                   "start": "",
-                  "end": "" 
+                  "end": "",
+                  "question_num": "1"
                 }
-
+    if 'questions' in session:
+        questions = session['questions']
+    else:
+        questions = list()
 
     if request.method == "POST":
         #Continue depending on the button used
@@ -180,33 +186,102 @@ def create_test():
             if request.form['create'] == 'Create test':
                 #save config to session
                 config['name'] = configform.name.data
-                config['start'] = configform.start_date.data
-                config['end'] = configform.end_date.data
+                config['start'] = str(configform.start_date.data)
+                config['end'] = str(configform.end_date.data)
+                config['question_num'] = configform.question_num.data
                 session['test_config'] = config
+            #Question creation buttons
+            elif request.form['create'] == 'Create full question':
+                question = dict()
+                question['id'] = questions.__len__()
+                question['type'] = "full"
+                question['question'] = fullform.question.data
+                question['value'] = fullform.value.data
+                questions.append(question)
+                session['questions'] = questions
+            elif request.form['create'] == 'Create number question':
+                question = dict()
+                question['id'] = questions.__len__()
+                question['type'] = "number"
+                question['question'] = numform.question.data
+                question['value'] = numform.value.data
+                question['answer'] = numform.answer.data
+                questions.append(question)
+                session['questions'] = questions
+            elif request.form['create'] == 'Create abcd question':
+                question = dict()
+                question['id'] = questions.__len__()
+                question['type'] = "abcd"
+                question['question'] = abcfrom.question.data
+                question['value'] = abcfrom.value.data
+                question['a'] = abcfrom.a.data
+                question['b'] = abcfrom.b.data
+                question['c'] = abcfrom.c.data
+                question['d'] = abcfrom.d.data
+                question['answer'] = abcfrom.answer.data
+                questions.append(question)
+                session['questions'] = questions
+        #Remove question
+        if 'remove' in request.form:          
+            for question in questions:
+                if question['id'] == int(request.form['remove']):
+                    questions.remove(question)
+                    session['questions'] = questions
+                    break
         #Update test
         if 'update' in request.form:
             if request.form['update'] == 'Update test':
                 #save config to session
                 config['name'] = configform.name.data
-                config['start'] = configform.start_date.data
-                config['end'] = configform.end_date.data
+                config['start'] = str(configform.start_date.data)
+                config['end'] = str(configform.end_date.data)
+                config['question_num'] = configform.question_num.data
                 session['test_config'] = config
+        #Save test
+        if 'save' in request.form:
+            if request.form['save'] == 'Save test':
+                #validate forms
+                if configform.start_date.validate(request.form) and configform.end_date.validate(request.form) and configform.question_num.validate(request.form):
+                    #save to DB
+                    #db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{config['start']}','{config['end']}','{session['id']}')")
+                    #tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
+                    #save JSON
+                    #test = dict()
+                    #test['config'] = config
+                    #test['questions'] = questions
+                    #with open(f"test_templates/test_template{tid[0]}.json","w") as testfile:
+                    #    json.dump(test,testfile)
+                    #db.execute(f"UPDATE `test_template` SET `file`='test_templates/test_template{tid[0]}' WHERE test_id = {tid[0]}")
+                    #db.commit()
+                    #pop all from session
+                    session.pop('test_config',None)
+                    session.pop('questions',None)
+                    config = {"name": "",
+                        "start": "",
+                        "end": "",
+                        "question_num": "1"
+                        }
+                #return to previous state TODO: feedback flash
         #Cancel
         if configform.cancel.data:
             #pop all data from session
             session.pop('test_config',None)
-            config = {"name": " ",
+            session.pop('questions',None)
+            config = {"name": "",
                   "start": "",
-                  "end": "" 
+                  "end": "",
+                  "question_num": "1" 
                 }
         if configform.add_full.data:
             return render_template('create_full.html',profile=session,form=fullform)
-        if fullform.create.data:
-            #save question
-            pass
+        if configform.add_num.data:
+            return render_template('create_num.html',profile=session,form=numform)
+        if configform.add_abc.data:
+            return render_template('create_abcd.html',profile=session,form=abcfrom)
+
     
+    #prefill the forms back
     configform.name.data = config["name"]
     configform.start_date.data = config["start"]
     configform.end_date.data = config["end"]
-
-    return render_template('create_test.html', profile=session, config=configform)
+    return render_template('create_test.html', profile=session, config=configform, questions=questions)

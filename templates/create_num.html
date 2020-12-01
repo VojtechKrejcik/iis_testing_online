@@ -13,6 +13,13 @@
                     {% else %}
                         {{ form.question(class="form-control form-control-lg") }}
                     {% endif %}
+                    <!--Answer Value-->
+                    <h3 color="black">{{ form.answer.label }} </h3>
+                    {% if form.answer.errors %}
+                        {{ form.answer(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.answer(class="form-control form-control-lg") }}
+                    {% endif %}
                     <!--Test Value-->
                     <h3 color="black">{{ form.value.label }} </h3>
                     {% if form.value.errors %}
@@ -22,7 +29,7 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    <input type="submit" name="create" value="Create full question" class="btn btn-danger">
+                    <input type="submit" name="create" value="Create number question" class="btn btn-danger">
                 </div>
             </div>
         </form>

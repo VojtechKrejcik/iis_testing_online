@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div id="config">
+    <h2>Create Question</h2>
+        <form method="POST" action="">
+            <div class="profile_table"> <!--TODO: Change and style the page-->
+                <div class="form-group">
+                    <!--Test question-->
+                    <h3 color="black">{{ form.question.label }}</h3>
+                    {% if form.question.errors %}
+                        {{ form.question(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.question(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <!--option a-->
+                    <h3 color="black">{{ form.a.label }} </h3>
+                    {% if form.a.errors %}
+                        {{ form.a(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.a(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <!--option b-->
+                    <h3 color="black">{{ form.b.label }} </h3>
+                    {% if form.b.errors %}
+                        {{ form.b(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.b(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <!--option c-->
+                    <h3 color="black">{{ form.c.label }} </h3>
+                    {% if form.c.errors %}
+                        {{ form.c(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.c(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <!--option d-->
+                    <h3 color="black">{{ form.d.label }} </h3>
+                    {% if form.d.errors %}
+                        {{ form.d(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.d(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <!--Correct anwer-->
+                    <h3 color="black">{{ form.answer.label }} </h3>
+                    {% if form.answer.errors %}
+                        {{ form.answer(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.answer(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <!--Test Value-->
+                    <h3 color="black">{{ form.value.label }} </h3>
+                    {% if form.value.errors %}
+                        {{ form.value(class="form-control form-control-lg form-control-lg is-invalid") }}
+                    {% else %}
+                        {{ form.value(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <input type="submit" name="create" value="Create abcd question" class="btn btn-danger">
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -27,9 +27,9 @@ class ChangePasswordForm(Form):
 
 class TestConfigForm(Form):
     name = StringField('Test Name',validators=[DataRequired(),Length(min=3)])
-    start_date = DateField('Start Date', format='%d/%m/%Y',description="dd/mm/yy")
+    start_date = DateField('Start Date', format='%d/%m/%Y')
     end_date = DateField('End Date', format='%d/%m/%Y')
-    create = SubmitField('Create test',id="TCreate",default=False)
+    question_num = IntegerField('Number of questions', validators=[DataRequired(),NumberRange(min=1)],default=1)
     cancel = SubmitField('cancel')
     add_full = SubmitField('Add fulltext question')
     add_num = SubmitField('Add number question')
@@ -37,6 +37,19 @@ class TestConfigForm(Form):
 
 class FullTextQuestionForm(Form):
     #TODO: Add immage support
-    question = StringField('Question', validators=[DataRequired()])
-    value = IntegerField('Point value', validators=[DataRequired(),NumberRange(min=1)])
-    create = SubmitField('Create question')
+    question = StringField('Question', validators=[DataRequired(),Length(min=3)])
+    value = IntegerField('Point value', validators=[DataRequired(),NumberRange(min=1)],default=1)
+
+class NumQuestionForm(Form):
+    question = StringField('Question', validators=[DataRequired(),Length(min=3)])
+    value = IntegerField('Point value', validators=[DataRequired(),NumberRange(min=1)],default=1)
+    answer = IntegerField('correct answer', validators=[DataRequired()],default=0)
+
+class AbcQuestionForm(Form):
+    question = StringField('Question', validators=[DataRequired(),Length(min=3)])
+    value = IntegerField('Point value', validators=[DataRequired(),NumberRange(min=1)],default=1)
+    answer = SelectField('Correct answer', choices=["a","b","c", "d"],default="a")
+    a = StringField('Option a')
+    b = StringField('Option b')
+    c = StringField('Option c')
+    d = StringField('Option d')

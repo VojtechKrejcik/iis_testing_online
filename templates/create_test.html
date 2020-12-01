@@ -30,6 +30,13 @@
                 {% else %}
                     {{ config.end_date(class="form-control form-control-lg") }}
                 {% endif %}
+                <!--Questions per test-->
+                <h3 color="black">{{ config.question_num.label }} </h3>
+                {% if config.question_num.errors %}
+                    {{ config.question_num(class="form-control form-control-lg form-control-lg is-invalid") }}
+                {% else %}
+                    {{ config.question_num(class="form-control form-control-lg") }}
+                {% endif %}
             </div>
             {% if not 'test_config' in profile %}
             <div class="form-group">
@@ -37,6 +44,7 @@
             </div>
             {% else %}
             <div class="form-group">
+                <input type="submit" name="save" value="Save test" class="btn btn-danger">
                 <input type="submit" name="update" value="Update test" class="btn btn-danger">
                 {{ config.cancel(class="btn btn-danger")}}
             </div>
@@ -50,6 +58,30 @@
                     </table>
                 </div>
                 <!--Generate questions to show-->
+                {% for question in questions %}
+                    <div class="question">
+                        <hr>
+                        Question: {{ question['question'] }} <button name="remove" value={{ question['id'] }} type="submit">X</button>
+                        <br>
+                        Value: {{ question['value'] }}
+                        {% if question['type'] == 'number' %}
+                            <br>
+                            Answer: {{ question['answer'] }}
+                        {% elif question['type'] == 'abcd' %}
+                            <br>
+                            A: {{ question['a'] }}
+                            <br>
+                            B: {{ question['b'] }}
+                            <br>
+                            C: {{ question['c'] }}
+                            <br>
+                            D: {{ question['d'] }}
+                            <br>
+                            Answer: {{ question['answer'] }}
+                        {% endif %}
+                        <hr>
+                    </div>
+                {% endfor %}
             {% endif %}
         </div>
     </form>
