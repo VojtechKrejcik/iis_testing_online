@@ -359,6 +359,7 @@ def remove_user(id):
 
 @app.route('/home/change_user/<string:id>', methods=['GET','POST'])
 def change_user(id):
+    db = dbSession()
     form = ChangeUserDataForm(request.form)
     user = db.execute("SELECT * FROM accounts WHERE id=:id",{"id":id}).fetchone()
     if request.method == "GET":
@@ -368,6 +369,7 @@ def change_user(id):
         form.surname.data = user[3]
         form.email.data = user[4]
         form.status.data = user[5]
+        db.close()    
         return render_template('change_user.html', profile=session, form=form)
     if request.method == "POST":
         if not form.validate():
@@ -377,7 +379,7 @@ def change_user(id):
             password = user[1]
         else:
              password = form.password.data
-        db = dbSession()
+        
         db.execute(f"""update `accounts` 
                     set 
                     `password`='{password}',
