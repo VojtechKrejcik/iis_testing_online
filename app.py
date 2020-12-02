@@ -19,8 +19,8 @@ app.secret_key = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis',pool_size=200, max_overflow=0)
-db=scoped_session(sessionmaker(bind=engine, expire_on_commit=False))
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis', pool_pre_ping=True)
+dbSession = sessionmaker(bind=engine, expire_on_commit=False)
 metadata = sq.MetaData()
 # Intialize MySQL
 #mysql = MySQL(app)
@@ -40,8 +40,9 @@ def login():
         email = request.form['email']
         password = request.form['password']
         # Check if account exists using MySQL
+        db = dbSession()
         account = db.execute("SELECT * FROM accounts WHERE email=:email",{"email":email}).fetchone()
-        
+        db.close()
         # If account exists in accounts table in out database
         if account:
             # Create session data, we can access this data in other routes
@@ -90,14 +91,17 @@ def add_user():
     form = AddUserForm(request.form)
     if request.method == "POST":
         if form.validate():
+            db = dbSession()
             if None == db.execute("SELECT * FROM accounts WHERE email=:email",{"email":form.email.data}).fetchone():
                 password = 'heslo'
                 data = {"password":password, "name":form.name.data,"surname":form.surname.data,"email":form.email.data, "status":form.status.data}
                 db.execute(f"INSERT INTO `accounts` (`password`, `name`, `surname`, `email`, `status`) VALUES (:password, :name, :surname, :email,:status)", data)
                 db.commit()
+                db.close()
                 flash(f'Login information for {form.name.data} {form.surname.data} are:\nEmail: {form.email.data}\nPassword: {password}', 'success')
                 return redirect(url_for('home'))
             else:
+                db.close()
                 flash("Email is already used", 'danger')
                 return redirect(url_for('add_user'))   
         else:
@@ -117,11 +121,15 @@ def changeName():
     if request.method == "POST":
         if not form.validate():
             flash("something went wrong", 'danger')
+                
+                
+        db = dbSession()
         db.execute(f"""update `accounts` 
                     set `surname`='{form.surname.data}',
                     set `name`='{form.name.data}'
                     where id = {session['id']}""")
-        db.commit()        
+        db.commit()  
+        db.close()      
         flash('surname changed!', 'success')
         return render_template('change_email.html', profile=session, form=form)
     return render_template('change_name.html', profile=session, form=form)
@@ -132,10 +140,13 @@ def changePassword():
     if request.method == "POST":
         if not form.validate():
             flash("something went wrong", 'danger')
+        
+        db = dbSession()
         db.execute(f"""update `accounts` 
                     set `password`='{form.password.data}'
                     where id = {session['id']}""")
         db.commit()        
+        db.close()
         flash('Password changed!', 'success')
         return render_template('change_password.html', profile=session, form=form)
 
@@ -151,13 +162,17 @@ def changeEmail():
     if request.method == "POST":
         if not form.validate():
             flash("something went wrong", 'danger')
+                
+        db = dbSession()
         if None == db.execute("SELECT * FROM accounts WHERE email=:email",{"email":form.email.data}).fetchone():
             db.execute(f"""update `accounts` 
                         set `email`='{form.email.data}'
                         where id = {session['id']}""")
-            db.commit()        
+            db.commit()   
+            db.close()     
             flash('email changed!', 'success')
             return render_template('change_email.html', profile=session, form=form)
+        db.close()
     flash("something went wrong", 'danger')
     return render_template('change_email.html', profile=session, form=form)
 
@@ -257,6 +272,7 @@ def create_test():
                     end = datetime.datetime.strptime(config['end'], '%m/%d/%Y')
                     end = end.strftime("%Y-%m-%d")
                     #save to DB
+                    db = dbSession()
                     if not 'edit' in session:
                         db.execute(f"INSERT INTO `test_template` (`active_from`, `active_to`, `creator`) VALUES ('{start}','{end}','{session['id']}')")
                         tid = db.execute("SELECT test_id FROM test_template ORDER BY test_id DESC LIMIT 1").fetchone()
@@ -274,6 +290,7 @@ def create_test():
                         json.dump(test,testfile)
                     db.execute(f"UPDATE `test_template` SET `file`='test_templates/test_template{tid[0]}.json' WHERE test_id = {tid[0]}")
                     db.commit()
+                    db.close()
                     #pop all from session
                     session.pop('test_config',None)
                     session.pop('questions',None)
@@ -320,9 +337,9 @@ def manage_users():
     if session['status'] != 'admin':
         flash("Acces denied", 'danger')
         return redirect(url_for('home'))
-
+    db = dbSession()
     table = db.execute("select * from accounts")
-
+    db.close()
     return render_template('manage_users.html', profile=session, users=table)
 
 @app.route('/home/remove_user/<string:id>')
@@ -334,8 +351,10 @@ def remove_user(id):
         return redirect(url_for('manage_users'))
     else:
         flash("User removed", 'success')
+        db = dbSession()
         db.execute("DELETE FROM accounts WHERE id=:id",{"id":id})
         db.commit()
+        db.close()
         return redirect(url_for('manage_users'))
 
 @app.route('/home/change_user/<string:id>', methods=['GET','POST'])
@@ -358,6 +377,7 @@ def change_user(id):
             password = user[1]
         else:
              password = form.password.data
+        db = dbSession()
         db.execute(f"""update `accounts` 
                     set 
                     `password`='{password}',
@@ -366,7 +386,8 @@ def change_user(id):
                     `email`='{form.email.data}',
                     `status`='{form.status.data}'
                     where id = {id};""")
-        db.commit()        
+        db.commit()    
+        db.close()    
         flash('User changed!', 'success')
         return redirect(url_for('manage_users'))
 
@@ -377,7 +398,9 @@ def my_tests():
     #Get user ID
     user_id = session['id']
     #Querry DB
+    db = dbSession()
     result = db.execute(f"SELECT `file` FROM `test_template` WHERE `creator` = {user_id}")
+    db.close()
     test_files = [row[0] for row in result] 
     #Print for all results in template
     tests = list()
@@ -400,13 +423,16 @@ def my_tests():
         if 'remove' in request.form:
             for test in tests:
                 if test['config']['id'] == int(request.form['remove']):
+                    db = dbSession()
                     db.execute(f"DELETE FROM `test_template` WHERE `test_id` = {test['config']['id']}")
                     db.commit()
+                    db.close()
                     os.remove(f"test_templates/test_template{test['config']['id']}.json")
                     tests.remove(test)
         if 'activate' in request.form:
             for test in tests:
                 if test['config']['id'] == int(request.form['activate']):
+                    db = dbSession()
                     result = db.execute(f"SELECT `person_id` FROM `registrations` WHERE `test_id` = {test['config']['id']} AND `person_type` = 'student' AND `approved` = '1'")
                     sudents =[row[0] for row in result]
                     for student in sudents:
@@ -414,6 +440,7 @@ def my_tests():
                             json.dump(test,f)
                         db.execute(f"UPDATE `registrations` SET `test_copy` = 'test_students/test_{student}_{test['config']['id']}.json' WHERE `test_id` = '{test['config']['id']}' AND `person_id` = '{student}' AND `person_type` = 'student'")
                         db.commit()
+                    db.close()
 
     return render_template('my_tests.html', profile=session, tests=tests)
 
@@ -421,6 +448,7 @@ def my_tests():
 def assistant_apply():
     user_id = session['id']
     #Querry DB
+    db = dbSession()
     result = db.execute(f"SELECT `file` FROM `test_template`")
     test_files = [row[0] for row in result]
     #Get info on tests
@@ -449,13 +477,14 @@ def assistant_apply():
                   db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='assistant'")
                   db.commit()
                   applied.remove(test['config']['id'])
-                  
+    db.close()         
     return render_template('assistant_apply.html', profile=session, tests=tests, applied=applied, approved=approved)
 
 @app.route("/home/register",methods=['GET','POST'])
 def student_register():
     user_id = session['id']
     #Querry DB
+    db = dbSession()
     result = db.execute(f"SELECT `file` FROM `test_template`")
     test_files = [row[0] for row in result]
     #Get info on tests
@@ -484,13 +513,14 @@ def student_register():
                   db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='student'")
                   db.commit()
                   applied.remove(test['config']['id'])
-                  
+    db.close()              
     return render_template('student_register.html', profile=session, tests=tests, applied=applied, approved=approved)
 
 @app.route("/home/approveass",methods=['GET','POST'])
 def approve_assistant():
     user_id = session['id']
     #Querry DB
+    db = dbSession()
     result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}' AND `person_type` = 'assistant'")
     assistants = list()
     for row in result:
@@ -519,13 +549,14 @@ def approve_assistant():
                   db.execute(f"DELETE FROM `registrations` WHERE `person_id` = {assistant['id']} AND `test_id` = {assistant['test']['config']['id']}")
                   db.commit()
                   assistants.remove(assistant)
-
+    db.close()
     return render_template('approve_assistant.html', profile=session, assistants=assistants)
 
 @app.route("/home/approvestud",methods=['GET','POST'])
 def approve_student():
     user_id = session['id']
     #Querry DB
+    db = dbSession()
     result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `person_type` = 'student'")
     assistants = list()
     for row in result:
@@ -554,7 +585,7 @@ def approve_student():
                   db.execute(f"DELETE FROM `registrations` WHERE `person_id` = {assistant['id']} AND `test_id` = {assistant['test']['config']['id']}")
                   db.commit()
                   assistants.remove(assistant)
-
+    db.close()
     return render_template('approve_student.html', profile=session, students=assistants)
 
 @app.route("/home/active_tests",methods=['GET','POST'])
@@ -562,6 +593,7 @@ def active_tests():
     #Get user ID
     user_id = session['id']
     #Querry DB
+    db = dbSession()
     result = db.execute(f"SELECT `test_copy` FROM `registrations` WHERE `person_id` = '{user_id}' AND `approved` = '1' AND `test_copy` is not NULL")
     test_files = [row[0] for row in result] 
     #Print for all results in template
@@ -578,7 +610,7 @@ def active_tests():
         if (start_time_obj.date() > cur_date) or (end_time_obj.date() < cur_date):
             tests.remove(test)
             continue
-
+    db.close()
     if request.method == "POST":
         last_test=-1
         last_question=-1
