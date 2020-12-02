@@ -3,19 +3,49 @@
 {% block content %}
 <h1>{{ test['config']['name']}}</h1>
 <div id=questions>
+    <a href="{{ url_for('active_tests') }}" class="sidebar_button">Back</a>
     {% for question in test['questions'] %}
-        <div class="profile_table">
+    <div class="profile_table">
             <h2>{{question['question']}}</h2>
             {% if question['type'] == 'abcd' %}
                 A: {{question['a']}}<br>
                 B: {{question['b']}}<br>
                 C: {{question['c']}}<br>
-                D: {{question['d']}}
+                D: {{question['d']}}<br>
             {% endif %}
-            <form method="POST" action="">
-                <button name="answer_q" value={{ question['id'] }} type="submit" class="btn btn-danger">Answer</button>
-                </form>
-        </div>
+            {% if 'stud_answer' in question %}
+            Your saved anwer: {{ question['stud_answer'] }}
+            {% endif %}
+        
+    <form method="POST" action="" id=> 
+        <input type="hidden" id="id" name='question_id' value={{ question['id'] }}>
+        {% if question['type'] == 'number' %}
+            <b>{{ answer.answer_num.label }}:</b>
+            {% if answer.answer_num.errors %}
+                <br>
+                <b style="color:red">Hodnota musí být číslo!</b>
+                {{ answer.answer_num(class="form-control form-control-lg form-control-lg is-invalid") }}
+            {% else %}
+                {{ answer.answer_num(class="form-control form-control-lg") }}
+            {% endif %}
+        {% elif question['type'] == 'abcd' %}
+            <b>{{ answer.answer_abc.label }}</b>
+            {% if answer.answer_abc.errors %}
+                {{ answer.answer_abc(class="form-control form-control-lg form-control-lg is-invalid") }}
+            {% else %}
+                {{ answer.answer_abc(class="form-control form-control-lg") }}
+            {% endif %}
+        {% else %}
+            <b>{{ answer.answer.label }}</b>
+            {% if answer.answer.errors %}
+                {{ answer.answer(class="form-control form-control-lg form-control-lg is-invalid") }}
+            {% else %}
+                {{ answer.answer(class="form-control form-control-lg") }}
+            {% endif %}
+        {% endif %}
+        {{ answer.save(class="btn btn-danger") }}
+    </form>
+    </div>
     {% endfor %}
 </div>
 {% endblock %}

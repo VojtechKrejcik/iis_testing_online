@@ -12,10 +12,14 @@
             <table>
                 <td>From: {{ test['config']['start'] }}</td><td>Until: {{ test['config']['end'] }}</td>
             </table>
-            <h3>Questions to generate:</h3>
-            {{ test['config']['question_num'] }}
             <h3>Questions total:</h3>
             {{ test['questions'].__len__() }}
+            <h3>Assistants:</h3>
+            {% for assistant in assistants %}
+                {% if assistant['test'] == test['config']['id'] %}
+                    {{ assistant['name'] }} {{assistant['surname']}} <a href="{{ url_for('kick_ass',test_id = assistant['test'], assistant_id = assistant['id']) }}" style="color: #A3080C;"><i class="fas fa-user-slash" ></i></a>
+                {%endif%}
+            {%endfor%}
             <form method="POST" action="">
             <table>
                 <td><button name="edit" value={{ test['config']['id'] }} type="submit" class="btn btn-danger">Edit</button></td>

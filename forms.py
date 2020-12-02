@@ -64,4 +64,6 @@ class AbcQuestionForm(Form):
 
 class AnwerForm(Form):
     answer = StringField('Answer')
-    submit = SubmitField('Submit')
+    answer_num = IntegerField('Anwer')
+    answer_abc = SelectField('Answer', choices=["a","b","c", "d"])
+    save = SubmitField('save')

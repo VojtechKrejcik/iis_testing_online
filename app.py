@@ -16,10 +16,17 @@ app = Flask(__name__)
 app.secret_key = 'secretkey'
 
 #SqlAlchemy Database Configuration With Mysql
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:prdel@localhost/iis'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+engine = sq.create_engine('mysql+pymysql://root:prdel@localhost/iis')
+
+#SqlAlchemy Database Configuration With Mysql
+"""
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis', pool_pre_ping=True)
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis', pool_pre_ping=True)"""
 dbSession = sessionmaker(bind=engine, expire_on_commit=False)
 metadata = sq.MetaData()
 # Intialize MySQL
@@ -402,6 +409,7 @@ def my_tests():
     #Querry DB
     db = dbSession()
     result = db.execute(f"SELECT `file` FROM `test_template` WHERE `creator` = {user_id}")
+    ass_result = db.execute(f"SELECT `registrations`.`test_id`,`name`,`surname`,`id` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}' AND `person_type` = 'assistant' AND `approved` = '1'")
     db.close()
     test_files = [row[0] for row in result] 
     #Print for all results in template
@@ -410,7 +418,11 @@ def my_tests():
         with open(test_file,"r") as f:
             tests.append(json.load(f))
 
-    #TODO: find approved assistants for print
+    #approved assistants for print
+    assistants = list()
+    for row in ass_result:
+        assistant = {'test': row[0],'name': row[1],'surname': row[2],'id': row[3]}
+        assistants.append(assistant)
 
     if request.method == "POST":
         #Edit tests
@@ -444,7 +456,7 @@ def my_tests():
                         db.commit()
                     db.close()
 
-    return render_template('my_tests.html', profile=session, tests=tests)
+    return render_template('my_tests.html', profile=session, tests=tests, assistants = assistants)
 
 @app.route("/home/apply",methods=['GET','POST'])
 def assistant_apply():
@@ -523,7 +535,7 @@ def approve_assistant():
     user_id = session['id']
     #Querry DB
     db = dbSession()
-    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}' AND `person_type` = 'assistant'")
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `creator` = '{user_id}' AND `person_type` = 'assistant' AND `approved` = '0'")
     assistants = list()
     for row in result:
         assistant = dict()
@@ -559,7 +571,7 @@ def approve_student():
     user_id = session['id']
     #Querry DB
     db = dbSession()
-    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `person_type` = 'student'")
+    result = db.execute(f"SELECT `id`,`name`,`surname`,`file` FROM `accounts` INNER JOIN `registrations` ON `accounts`.`id` = `registrations`.`person_id` INNER JOIN `test_template` ON `registrations`.`test_id` = `test_template`.`test_id` WHERE `person_type` = 'student' AND `approved` = '0'")
     assistants = list()
     for row in result:
         assistant = dict()
@@ -614,22 +626,40 @@ def active_tests():
             continue
     db.close()
     if request.method == "POST":
-        last_test=-1
-        last_question=-1
-        answer = AnwerForm(request.form)
         if 'open' in request.form:
           for test in tests:
               if test['config']['id'] == int(request.form['open']):
-                  last_test = test['config']['id']
-                  return render_template('test.html', profile=session, test=test)
-        if 'answer_q' in request.form:
-            for question in tests[last_test]['questions']:
-                if question['id'] == int(request.form['answer_q']):
-                    last_question = question['id']
-                    return render_template('question.html', profile=session, question=question, answer = answer)
-        if answer.submit.data:
-            tests[last_test]['questions'][last_question]['answer'] = answer.answer.data
-            with open(test_files[last_test],"w") as f:
-                json.dump(tests[last_test],f)
+                  return redirect(url_for('test',test_id = test['config']['id']))
+        
     return render_template('active_tests.html', profile=session, tests=tests)
 
+@app.route("/home/test/<string:test_id>",methods=['GET','POST'])
+def test(test_id):
+    user_id = session['id']
+    answerform = AnwerForm(request.form)
+    #open test file and load test into memory
+    with open(f"test_students/test_{user_id}_{test_id}.json","r") as f:
+        test = json.load(f)
+
+    if request.method == "POST":
+        if answerform.save.data:
+            qid = int(request.form['question_id']) 
+            if test['questions'][qid]['type'] == 'full':
+                test['questions'][qid]['stud_answer'] = answerform.answer.data
+            elif test['questions'][qid]['type'] == 'number':
+                answerform.answer_num.validate(request.form)
+                test['questions'][qid]['stud_answer'] = answerform.answer_num.data
+            else:
+                test['questions'][qid]['stud_answer'] = answerform.answer_abc.data
+            with open(f"test_students/test_{user_id}_{test_id}.json","w") as f:
+                json.dump(test,f)
+
+    return render_template('test.html', profile=session, test=test, answer = answerform)
+
+@app.route("/home/my_tests/",methods=['GET','POST'])
+def kick_ass():
+    db = dbSession()
+    db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{request.args.get('assistant_id')}' AND `test_id` = {request.args.get('test_id')} AND `person_type` = 'assistant'")
+    db.commit()
+    db.close()
+    return redirect(url_for('my_tests'))
