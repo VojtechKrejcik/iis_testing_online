@@ -15,13 +15,18 @@ from sqlalchemy.orm import scoped_session,sessionmaker, Session
 app = Flask(__name__)
 app.secret_key = 'secretkey'
 
+#SqlAlchemy Database Configuration With Mysql
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:prdel@localhost/iis'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+engine = sq.create_engine('mysql+pymysql://root:prdel@localhost/iis')
 
 #SqlAlchemy Database Configuration With Mysql
-
+"""
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis', pool_pre_ping=True)
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis', pool_pre_ping=True)"""
 dbSession = sessionmaker(bind=engine, expire_on_commit=False)
 metadata = sq.MetaData()
 # Intialize MySQL
@@ -218,6 +223,7 @@ def create_test():
                 question['question'] = fullform.question.data
                 question['value'] = fullform.value.data
                 question['earned'] = 0
+                question['stud_answer'] = ""
                 questions.append(question)
                 session['questions'] = questions
             elif request.form['create'] == 'Create number question':
@@ -228,6 +234,7 @@ def create_test():
                 question['value'] = numform.value.data
                 question['answer'] = numform.answer.data
                 question['earned'] = 0
+                question['stud_answer'] = ""
                 questions.append(question)
                 session['questions'] = questions
             elif request.form['create'] == 'Create abcd question':
@@ -242,6 +249,7 @@ def create_test():
                 question['c'] = abcfrom.c.data
                 question['d'] = abcfrom.d.data
                 question['answer'] = abcfrom.answer.data
+                question['stud_answer'] = ""
                 questions.append(question)
                 session['questions'] = questions
         #Remove question
@@ -701,7 +709,7 @@ def score_tests():
     for test in tests:
         end_time_obj = datetime.datetime.strptime(test['config']['end'], '%m/%d/%Y')
         #only interested in done tests
-        if (end_time_obj.date() < cur_date): 
+        if (end_time_obj.date() > cur_date): 
             tests.remove(test)
             continue
 
@@ -748,3 +756,33 @@ def score_test():
             json.dump(test,f)
     
     return render_template('score_test.html', profile=session, test=test, answer = scoreform)
+
+@app.route("/home/show_tests",methods=['GET','POST'])
+def show_tests():
+    #Get user ID
+    user_id = session['id']
+    #Querry DB
+    db = dbSession()
+    result = db.execute(f"SELECT `test_copy` FROM `registrations` WHERE `person_id` = '{user_id}' AND `approved` = '1' AND `person_type` = 'student' and `test_copy` is not null")
+    db.close()
+    my_test_files = [row[0] for row in result]
+    tests = list()
+    for test_file in my_test_files:
+        with open(test_file,"r") as f:
+            tests.append(json.load(f))
+
+    cur_date = datetime.date.today()
+    for test in tests:
+        end_time_obj = datetime.datetime.strptime(test['config']['end'], '%m/%d/%Y')
+        #only interested in done tests
+        if (end_time_obj.date() > cur_date): 
+            tests.remove(test)
+            continue
+    if request.method == "POST":
+        if 'open' in request.form:
+            for test in tests:
+              if test['config']['id'] == int(request.form['open']):
+                return render_template("show_tests.html", profile=session, tests=tests, opened = test['config']['id'])
+  
+    return render_template("show_tests.html", profile=session, tests=tests, opened = 'NO')
+

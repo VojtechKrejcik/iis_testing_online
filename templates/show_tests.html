@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Submited tests</h1>
+<div id=tests>
+    {% for test in tests %}
+        <div class="profile_table">
+            <h2>{{ test['config']['name'] }}</h2>
+            <h3>Active</h3>
+            <table>
+                <td>From: {{ test['config']['start'] }}</td><td>Until: {{ test['config']['end'] }}</td>
+            </table>
+            <h3>Questions total:</h3>
+            {{ test['questions'].__len__() }}
+            <h3>Score:</h3>
+            {{test['score']}}
+            {% if test['config']['id'] == opened %}
+                <form method="POST" action="">
+                    <button name="close" value={{ test['config']['id'] }} type="submit" class="btn btn-danger">Close test</button>
+                </form>
+                <div id='questions'>
+                    {% for question in test['questions'] %}
+                        <hr>
+                        <b>Question: {{question['question']}}</b>
+                        <br>
+                        Score: {{question['earned']}}
+                        <br>
+                        Score max: {{question['value']}}
+                        <br>
+                        Your answer: {{ question['stud_answer'] }}
+                        <br>
+                        {% if question['type'] != 'full' %}
+                            Correct anwer: {{question['answer']}}
+                        {%endif%}
+                        <hr>
+                    {%endfor%}
+                </div>
+            {% else %}
+                <form method="POST" action="">
+                    <button name="open" value={{ test['config']['id'] }} type="submit" class="btn btn-danger">Open test</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
