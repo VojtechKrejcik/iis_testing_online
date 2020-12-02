@@ -454,6 +454,7 @@ def my_tests():
                     db = dbSession()
                     result = db.execute(f"SELECT `person_id` FROM `registrations` WHERE `test_id` = {test['config']['id']} AND `person_type` = 'student' AND `approved` = '1'")
                     sudents =[row[0] for row in result]
+                    test['score'] = 'NEHODNOCENO'
                     for student in sudents:
                         with open(f"test_students/test_{student}_{test['config']['id']}.json","w") as f:
                             json.dump(test,f)
@@ -673,3 +674,82 @@ def kick_ass():
     db.commit()
     db.close()
     return redirect(url_for('my_tests'))
+
+@app.route("/home/score",methods=['GET','POST'])
+def score_tests():
+    #Get user ID
+    user_id = session['id']
+    #Querry DB
+    db = dbSession()
+    tests = list()
+    #Get all test where user is assistent
+    result = db.execute(f"SELECT `test_id` FROM `registrations` WHERE `person_id` = '{user_id}' AND `approved` = '1' AND `person_type` = 'assistant'")
+    my_tests = [row[0] for row in result]
+    #Get all tests where user is creator
+    result = db.execute(f"SELECT `test_id` FROM `test_template` WHERE `creator` = '{user_id}'")
+    for row in result:
+        if row[0] in my_tests:
+            continue
+        my_tests.append(row[0])
+
+    for test in my_tests:
+        result = db.execute(f"SELECT `test_copy`,`person_id`,`name`,`surname` FROM `registrations` INNER JOIN `accounts` ON `accounts`.`id` = `registrations`.`person_id` WHERE `person_type` = 'student' AND `approved` = '1' AND `test_copy` is not NULL and `test_id` = '{test}'")
+        for row in result:
+            with open(row[0],"r") as f:
+                test = json.load(f)
+                test['student'] = {'id': row[1],'name': row[2],'surname': row[3]}
+                tests.append(test)
+            
+    db.close()
+
+    cur_date = datetime.date.today()
+    for test in tests:
+        end_time_obj = datetime.datetime.strptime(test['config']['end'], '%m/%d/%Y')
+        #only interested in done tests
+        if (end_time_obj.date() < cur_date): #TODO: Swich that shit around
+            tests.remove(test)
+            continue
+
+    if request.method == "POST":
+        if 'open' in request.form:
+          for test in tests:
+              if test['config']['id'] == int(request.form['open']):
+                  return redirect(url_for('score_test',test_id = test['config']['id'],student_id = test['student']['id']))
+
+    return render_template("score_tests.html", profile=session, tests=tests)
+
+@app.route("/home/score_test/",methods=['GET','POST'])
+def score_test():
+    scoreform = AnwerForm(request.form)
+    #open test file and load test into memory
+    with open(f"test_students/test_{request.args.get('student_id')}_{request.args.get('test_id')}.json","r") as f:
+        test = json.load(f)
+
+    if request.method == "POST":
+        if scoreform.save.data:
+            qid = int(request.form['question_id']) 
+            scoreform.answer_num.validate(request.form)
+            if(test['questions'][qid]['value'] < scoreform.answer_num.data or scoreform.answer_num.data < 0):
+                flash(f"Out of range for points max is: {test['questions'][qid]['value']}",'danger')
+                return render_template('score_test.html', profile=session, test=test, answer = scoreform)
+
+            test['questions'][qid]['earned'] = scoreform.answer_num.data
+            test['score'] = int(test['score']) + int(scoreform.answer_num.data)
+            with open(f"test_students/test_{request.args.get('student_id')}_{request.args.get('test_id')}.json","w") as f:
+                json.dump(test,f)
+
+    if test['score'] == 'NEHODNOCENO':
+        score = 0
+        for question in test['questions']:
+            if question['type'] == 'full':
+                continue
+            if question['stud_answer'] == question['answer']:
+                score += int(question['value'])
+                question['earned'] = question['value']
+            else:
+                question['earned'] = 0
+        test['score'] = score
+        with open(f"test_students/test_{request.args.get('student_id')}_{request.args.get('test_id')}.json","w") as f:
+            json.dump(test,f)
+    
+    return render_template('score_test.html', profile=session, test=test, answer = scoreform)

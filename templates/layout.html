@@ -25,7 +25,7 @@
                 {% if profile.status == "admin" or profile.status == "professor" or profile.status == "assistant" %}
                     <h2>Assistant</h2>
                     <a href="{{ url_for('assistant_apply') }}" class="sidebar_button">Apply for test</a>
-                    <a href="#" class="sidebar_button">Score tests</a>
+                    <a href="{{ url_for('score_tests') }}" class="sidebar_button">Score tests</a>
                     <a href="{{ url_for('approve_student') }}" class="sidebar_button">Approve student</a>
                 {% endif %}
             {%  endblock sidebar  %}

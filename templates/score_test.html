@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>{{ test['config']['name']}}</h1>
+<div id=questions>
+    <a href="{{ url_for('score_tests') }}" class="sidebar_button">Back</a>
+    {% for question in test['questions'] %}
+    <div class="profile_table">
+            <h2>{{question['question']}}</h2>
+            {% if question['type'] == 'abcd' %}
+                A: {{question['a']}}<br>
+                B: {{question['b']}}<br>
+                C: {{question['c']}}<br>
+                D: {{question['d']}}<br>
+            {% endif %}
+            {% if 'stud_answer' in question %}
+            <b>Students anwer: {{ question['stud_answer'] }}</b><br>
+            <b>Score: {{ question['earned'] }}</b>
+            {% else %}
+            <b style="color:red">No answe given</b><br>
+            <b>Score: 0</b>
+            {% endif %}
+            <br>
+            Score max: {{ question['value'] }}
+    <form method="POST" action=""> 
+        <input type="hidden" id="id" name='question_id' value={{ question['id'] }}>
+        {% if question['type'] == 'full' %}
+            {% if answer.answer_num.errors %}
+                <b style="color:red">Hodnota musí být číslo!</b>
+                {{ answer.answer_num(class="form-control form-control-lg form-control-lg is-invalid") }}
+            {% else %}
+                {{ answer.answer_num(class="form-control form-control-lg") }}
+            {% endif %}
+            {{ answer.save(class="btn btn-danger") }}
+        {% else %}
+            <!--Autoscore-->
+        {% endif %}
+    </form>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

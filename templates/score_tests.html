@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Score tests</h1>
+<div id=tests>
+    {% for test in tests %}
+        <div class="profile_table">
+            <h2>{{ test['config']['name'] }}</h2>
+            <h3>Active</h3>
+            <table>
+                <td>From: {{ test['config']['start'] }}</td><td>Until: {{ test['config']['end'] }}</td>
+            </table>
+            <h3>Questions total:</h3>
+            {{ test['questions'].__len__() }}
+            <h3>Student:</h3>
+            {{ test['student']['name'] }} {{ test['student']['surname'] }}
+            <h3>Score:</h3>
+            {{test['score']}}
+            <form method="POST" action="">
+                <button name="open" value={{ test['config']['id'] }} type="submit" class="btn btn-danger">Open test</button>
+                </form>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
