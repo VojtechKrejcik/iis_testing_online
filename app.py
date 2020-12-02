@@ -438,6 +438,11 @@ def my_tests():
             for test in tests:
                 if test['config']['id'] == int(request.form['remove']):
                     db = dbSession()
+                    #Find all students with active tests
+                    result = db.execute(f"SELECT `test_copy` from `registrations` WHERE `test_id` = {test['config']['id']} AND `test_copy` IS NOT NULL")
+                    for row in result:
+                        os.remove(row[0])
+                    db.execute(f"DELETE FROM `registrations` WHERE `test_id` = {test['config']['id']}")
                     db.execute(f"DELETE FROM `test_template` WHERE `test_id` = {test['config']['id']}")
                     db.commit()
                     db.close()
@@ -523,10 +528,15 @@ def student_register():
         if 'unapply' in request.form:
             for test in tests:
               if test['config']['id'] == int(request.form['unapply']):
+                  result = db.execute(f"SELECT `test_copy` FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='student' and `test_copy` is not null")
+                  for row in result:
+                        os.remove(row[0])
                   #input into DB
                   db.execute(f"DELETE FROM `registrations` WHERE `person_id` = '{user_id}' and `test_id` = '{test['config']['id']}' and `person_type`='student'")
                   db.commit()
                   applied.remove(test['config']['id'])
+                  if test['config']['id'] in approved:
+                    approved.remove(test['config']['id'])
     db.close()              
     return render_template('student_register.html', profile=session, tests=tests, applied=applied, approved=approved)
 
