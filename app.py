@@ -15,18 +15,13 @@ from sqlalchemy.orm import scoped_session,sessionmaker, Session
 app = Flask(__name__)
 app.secret_key = 'secretkey'
 
-#SqlAlchemy Database Configuration With Mysql
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:prdel@localhost/iis'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-engine = sq.create_engine('mysql+pymysql://root:prdel@localhost/iis')
 
 #SqlAlchemy Database Configuration With Mysql
-"""
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis', pool_pre_ping=True)"""
+engine = sq.create_engine('mysql+pymysql://xkrejc68@real-iis:prdel666$@real-iis.mysql.database.azure.com/iis', pool_pre_ping=True)
 dbSession = sessionmaker(bind=engine, expire_on_commit=False)
 metadata = sq.MetaData()
 # Intialize MySQL
@@ -706,7 +701,7 @@ def score_tests():
     for test in tests:
         end_time_obj = datetime.datetime.strptime(test['config']['end'], '%m/%d/%Y')
         #only interested in done tests
-        if (end_time_obj.date() < cur_date): #TODO: Swich that shit around
+        if (end_time_obj.date() < cur_date): 
             tests.remove(test)
             continue
 
