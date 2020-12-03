@@ -16,13 +16,13 @@
                     <a href="{{ url_for('add_user') }}" class="sidebar_button">Add user</a>
                     <a href="{{ url_for('manage_users') }}" class="sidebar_button">Manage users</a>
                 {% endif %} 
-                {% if profile.status == "admin" or profile.status == "professor" %}
+                {% if profile.status == "admin" or profile.status == "profesor" %}
                     <h2>Professor</h2>
                     <a href="{{ url_for('create_test') }}" class="sidebar_button">Create test</a>
                     <a href="{{ url_for('my_tests') }}" class="sidebar_button">Test created by me</a>
                     <a href="{{ url_for('approve_assistant') }}" class="sidebar_button">Authorize assitant</a>
                 {% endif %}
-                {% if profile.status == "admin" or profile.status == "professor" or profile.status == "assistant" %}
+                {% if profile.status == "admin" or profile.status == "profesor" or profile.status == "asistent" %}
                     <h2>Assistant</h2>
                     <a href="{{ url_for('assistant_apply') }}" class="sidebar_button">Apply for test</a>
                     <a href="{{ url_for('score_tests') }}" class="sidebar_button">Score tests</a>
